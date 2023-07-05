@@ -1,6 +1,6 @@
 [package]
 name = "mafa"
-version = "0.1.0-beta1"
+version = "0.1.0-beta2"
 edition = "2021"
 authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
 description = """Mafa is a command-line tool that helps people interact
@@ -9,7 +9,7 @@ repository = "http://github.com/imichael2e2/mafa"
 documentation = "http://github.com/imichael2e2/mafa"
 homepage = "http://github.com/imichael2e2/mafa"
 license = "GPL-3.0-or-later"
-keywords = ["webdriver", "twitter", "google-translate", "crawler"]
+keywords = ["webdriver", "twitter", "google-translate", "not-a-crawler"]
 categories = ["command-line-utilities", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
