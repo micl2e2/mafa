@@ -6,6 +6,7 @@
 #+ATTR_HTML: :width 700px
 [[./demo.gif]]
 
+# DONT FORGET!
 # <img src="demo.gif" alt="demo" width="500"/>
 
 * Installation
@@ -56,9 +57,9 @@ If you have Cargo installed, then you can
 #+end_src
 
 
-** Option 3: Github releases
+** Option 3: Prebuilt binaries
 
-...
+Check [[https://github.com/imichael2e2/mafa/releases][releases]].
 
 
 
