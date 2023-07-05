@@ -8,6 +8,7 @@
 Table of Contents
 ─────────────────
 
+A Small Demo
 Installation
 .. Prerequisite
 .. Option 1: Cargo install (recommended)
@@ -23,6 +24,12 @@ License
 
 
 
+
+
+A Small Demo
+════════════
+
+  <./demo.gif>
 
 
 Installation
