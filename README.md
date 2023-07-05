@@ -1,34 +1,35 @@
 
 # Table of Contents
 
--   [A Small Demo](#org4934c94)
--   [Installation](#orgd87d9bd)
-    -   [Prerequisite](#orga9e7c1d)
-    -   [Option 1: Cargo install (recommended)](#org4623b67)
-    -   [Option 2: Build from source](#org84d080e)
-    -   [Option 3: Prebuilt binaries](#org59f0280)
--   [Mafa is for me?](#org263e066)
--   [What is Mafa](#org7d020bf)
-    -   [How Mafa works](#org6fba840)
-    -   [Why Mafa](#org7482097)
-    -   [About Mafa](#orge4ee37f)
--   [Supported modules ](#orgc485946)
--   [License](#orga759c61)
+-   [A Small Demo](#org0e60bd9)
+-   [Installation](#org803db67)
+    -   [Prerequisite](#orgafc35a6)
+    -   [Option 1: Cargo install (recommended)](#org2aaf304)
+    -   [Option 2: Build from source](#orgafad14d)
+    -   [Option 3: Prebuilt binaries](#org2a2c02a)
+-   [Mafa is for me?](#orgeecf523)
+-   [What is Mafa](#orgbe6d532)
+    -   [How Mafa works](#orgb04e002)
+    -   [Why Mafa](#org3d5c28e)
+    -   [About Mafa](#orgd637277)
+-   [Supported modules ](#org9cb13a8)
+-   [Contributing](#orgf0034ec)
+-   [License](#org778bc0d)
 
 
 
-<a id="org4934c94"></a>
+<a id="org0e60bd9"></a>
 
 # A Small Demo
 
-<img src="demo.gif" alt="demo" width="500"/>
+<img src="demo.gif" alt="demo" width="500px"/>
 
-<a id="orgd87d9bd"></a>
+<a id="org803db67"></a>
 
 # Installation
 
 
-<a id="orga9e7c1d"></a>
+<a id="orgafc35a6"></a>
 
 ## Prerequisite
 
@@ -44,7 +45,7 @@ depends on:
 4.  gzip (any version)
 
 
-<a id="org4623b67"></a>
+<a id="org2aaf304"></a>
 
 ## Option 1: Cargo install (recommended)
 
@@ -59,7 +60,7 @@ If you have Cargo installed, then you can
     mafa --version
 
 
-<a id="org84d080e"></a>
+<a id="orgafad14d"></a>
 
 ## Option 2: Build from source
 
@@ -76,14 +77,14 @@ If you have Cargo installed, then you can
     ./target/release/mafa --version
 
 
-<a id="org59f0280"></a>
+<a id="org2a2c02a"></a>
 
 ## Option 3: Prebuilt binaries
 
 Check [releases](https://github.com/imichael2e2/mafa/releases).
 
 
-<a id="org263e066"></a>
+<a id="orgeecf523"></a>
 
 # Mafa is for me?
 
@@ -110,7 +111,7 @@ However, Mafa is **NOT** for you if
     data. (A dedicated web crawler or data scraper does a better job)
 
 
-<a id="org7d020bf"></a>
+<a id="orgbe6d532"></a>
 
 # What is Mafa
 
@@ -120,10 +121,10 @@ websites in a terminal(tty). It accesses websites through
 their job. Each module has a fixed destination website and has a
 specific job for that site. With modules, users can browse websites
 without interacting with web browsers directly. The supported  
-modules are listed [below](#org7d5232a).  
+modules are listed [below](#orgdb570b5).  
 
 
-<a id="org6fba840"></a>
+<a id="orgb04e002"></a>
 
 ## How Mafa works
 
@@ -132,7 +133,7 @@ Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With 
 can act like a human, browsing websites naturally for its user. 
 
 
-<a id="org7482097"></a>
+<a id="org3d5c28e"></a>
 
 ## Why Mafa
 
@@ -172,7 +173,7 @@ However, Mafa can handle those dynamic and unpredictable
 web pages as effortlessly as the static ones. 
 
 
-<a id="orge4ee37f"></a>
+<a id="orgd637277"></a>
 
 ## About Mafa
 
@@ -193,9 +194,9 @@ accessible for all users without discrimination, the APIs to access it
 should be as well. 
 
 
-<a id="orgc485946"></a>
+<a id="org9cb13a8"></a>
 
-# Supported modules <a id="org7d5232a"></a>
+# Supported modules <a id="orgdb570b5"></a>
 
 -   IMODE: Interactive mode.
 
@@ -204,7 +205,14 @@ should be as well.
 -   GTRANS: Google translation service.
 
 
-<a id="orga759c61"></a>
+<a id="orgf0034ec"></a>
+
+# Contributing
+
+Mafa is still in early development, any contribution is welcomed!
+
+
+<a id="org778bc0d"></a>
 
 # License
 
