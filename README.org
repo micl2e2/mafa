@@ -1,6 +1,12 @@
 #+title: Mafa
 #+OPTIONS: num:nil toc:2
 
+* A Small Demo
+
+#+ATTR_HTML: :width 700px
+[[./demo.gif]]
+
+# <img src="demo.gif" alt="demo" width="500"/>
 
 * Installation
 

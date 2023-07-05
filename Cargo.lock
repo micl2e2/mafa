@@ -257,7 +257,7 @@ checksum = "518ef76f2f87365916b142844c16d8fefd85039bc5699050210a7778ee1cd1de"
 
 [[package]]
 name = "mafa"
-version = "0.1.0-beta1"
+version = "0.1.0-beta2"
 dependencies = [
  "bwrap",
  "clap",
