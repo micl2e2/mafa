@@ -1,35 +1,38 @@
 
 # Table of Contents
 
--   [A Small Demo](#org0e60bd9)
--   [Installation](#org803db67)
-    -   [Prerequisite](#orgafc35a6)
-    -   [Option 1: Cargo install (recommended)](#org2aaf304)
-    -   [Option 2: Build from source](#orgafad14d)
-    -   [Option 3: Prebuilt binaries](#org2a2c02a)
--   [Mafa is for me?](#orgeecf523)
--   [What is Mafa](#orgbe6d532)
-    -   [How Mafa works](#orgb04e002)
-    -   [Why Mafa](#org3d5c28e)
-    -   [About Mafa](#orgd637277)
--   [Supported modules ](#org9cb13a8)
--   [Contributing](#orgf0034ec)
--   [License](#org778bc0d)
+-   [A Small Demo](#org61ec11a)
+-   [Installation](#org0da5bfd)
+    -   [Prerequisite](#org62b51bf)
+    -   [Option 1: Cargo install (recommended)](#org6b701ca)
+    -   [Option 2: Build from source](#orgc9548d2)
+    -   [Option 3: Prebuilt binaries](#orgd373550)
+-   [Mafa is for me?](#org8602937)
+-   [What is Mafa](#orgcb553e1)
+    -   [How Mafa works](#org256e25b)
+    -   [Why Mafa](#org65b1f5b)
+    -   [About Mafa](#org80183fa)
+-   [Supported modules ](#org51a98ac)
+-   [Contributing](#org58deb4d)
+-   [License](#org885ce3b)
 
 
 
-<a id="org0e60bd9"></a>
+<a id="org61ec11a"></a>
 
 # A Small Demo
 
+*(captured by [LICEcap](https://www.cockos.com/licecap/))*
+
 <img src="demo.gif" alt="demo" width="500px"/>
 
-<a id="org803db67"></a>
+
+<a id="org0da5bfd"></a>
 
 # Installation
 
 
-<a id="orgafc35a6"></a>
+<a id="org62b51bf"></a>
 
 ## Prerequisite
 
@@ -45,7 +48,7 @@ depends on:
 4.  gzip (any version)
 
 
-<a id="org2aaf304"></a>
+<a id="org6b701ca"></a>
 
 ## Option 1: Cargo install (recommended)
 
@@ -60,7 +63,7 @@ If you have Cargo installed, then you can
     mafa --version
 
 
-<a id="orgafad14d"></a>
+<a id="orgc9548d2"></a>
 
 ## Option 2: Build from source
 
@@ -77,27 +80,18 @@ If you have Cargo installed, then you can
     ./target/release/mafa --version
 
 
-<a id="org2a2c02a"></a>
+<a id="orgd373550"></a>
 
 ## Option 3: Prebuilt binaries
 
 Check [releases](https://github.com/imichael2e2/mafa/releases).
 
 
-<a id="orgeecf523"></a>
+<a id="org8602937"></a>
 
 # Mafa is for me?
 
-Mafa is for you if 
-
--   You believe that text is more powerful than images or videos in 
-    terms of information delivery.
-
--   You believe that the vast majority of Web UIs are far from
-    efficient, but still have faith in our Web.
-
--   You believe that most jobs should do in a terminal rather than
-    a GUI application.
+Mafa is for you if Mafa has whatever you can make use of.
 
 However, Mafa is **NOT** for you if
 
@@ -111,7 +105,7 @@ However, Mafa is **NOT** for you if
     data. (A dedicated web crawler or data scraper does a better job)
 
 
-<a id="orgbe6d532"></a>
+<a id="orgcb553e1"></a>
 
 # What is Mafa
 
@@ -121,10 +115,10 @@ websites in a terminal(tty). It accesses websites through
 their job. Each module has a fixed destination website and has a
 specific job for that site. With modules, users can browse websites
 without interacting with web browsers directly. The supported  
-modules are listed [below](#orgdb570b5).  
+modules are listed [below](#org08877ce).  
 
 
-<a id="orgb04e002"></a>
+<a id="org256e25b"></a>
 
 ## How Mafa works
 
@@ -133,7 +127,7 @@ Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With 
 can act like a human, browsing websites naturally for its user. 
 
 
-<a id="org3d5c28e"></a>
+<a id="org65b1f5b"></a>
 
 ## Why Mafa
 
@@ -173,7 +167,7 @@ However, Mafa can handle those dynamic and unpredictable
 web pages as effortlessly as the static ones. 
 
 
-<a id="orgd637277"></a>
+<a id="org80183fa"></a>
 
 ## About Mafa
 
@@ -194,9 +188,9 @@ accessible for all users without discrimination, the APIs to access it
 should be as well. 
 
 
-<a id="org9cb13a8"></a>
+<a id="org51a98ac"></a>
 
-# Supported modules <a id="orgdb570b5"></a>
+# Supported modules <a id="org08877ce"></a>
 
 -   IMODE: Interactive mode.
 
@@ -205,14 +199,14 @@ should be as well.
 -   GTRANS: Google translation service.
 
 
-<a id="orgf0034ec"></a>
+<a id="org58deb4d"></a>
 
 # Contributing
 
 Mafa is still in early development, any contribution is welcomed!
 
 
-<a id="org778bc0d"></a>
+<a id="org885ce3b"></a>
 
 # License
 

@@ -1,8 +1,8 @@
-                               ━━━━━━━━━
+                             ━━━━━━━━━━━━━
                                   MAFA
 
-                                Michael
-                               ━━━━━━━━━
+                              Michael Lee
+                             ━━━━━━━━━━━━━
 
 
 Table of Contents
@@ -13,13 +13,14 @@ Installation
 .. Prerequisite
 .. Option 1: Cargo install (recommended)
 .. Option 2: Build from source
-.. Option 3: Github releases
+.. Option 3: Prebuilt binaries
 Mafa is for me?
 What is Mafa
 .. How Mafa works
 .. Why Mafa
 .. About Mafa
 Supported modules
+Contributing
 License
 
 
@@ -29,7 +30,12 @@ License
 A Small Demo
 ════════════
 
+  /(captured by [LICEcap])/
+
   <./demo.gif>
+
+
+[LICEcap] <https://www.cockos.com/licecap/>
 
 
 Installation
@@ -83,25 +89,19 @@ Option 2: Build from source
   └────
 
 
-Option 3: Github releases
-─────────────────────────
+Option 3: Prebuilt binaries
+───────────────────────────
 
-  …
+  Check [releases].
+
+
+[releases] <https://github.com/imichael2e2/mafa/releases>
 
 
 Mafa is for me?
 ═══════════════
 
-  Mafa is for you if
-
-  • You believe that text is more powerful than images or videos in
-    terms of information delivery.
-
-  • You believe that the vast majority of Web UIs are far from
-    efficient, but still have faith in our Web.
-
-  • You believe that most jobs should do in a terminal rather than a GUI
-    application.
+  Mafa is for you if Mafa has whatever you can make use of.
 
   However, Mafa is *NOT* for you if
 
@@ -220,6 +220,12 @@ Supported modules
   • TWTL: Twitter users' timeline.
 
   • GTRANS: Google translation service.
+
+
+Contributing
+════════════
+
+  Mafa is still in early development, any contribution is welcomed!
 
 
 License

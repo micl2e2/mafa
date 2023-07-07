@@ -3,11 +3,14 @@
 
 * A Small Demo
 
+/(captured by [[https://www.cockos.com/licecap/][LICEcap]])/
+
 #+ATTR_HTML: :width 700px
 [[./demo.gif]]
 
 # DONT FORGET!
 # <img src="demo.gif" alt="demo" width="500px"/>
+
 
 * Installation
 
@@ -67,16 +70,7 @@ Check [[https://github.com/imichael2e2/mafa/releases][releases]].
 
 * Mafa is for me?
 
-Mafa is for you if 
-
-- You believe that text is more powerful than images or videos in 
-  terms of information delivery.
-
-- You believe that the vast majority of Web UIs are far from
-  efficient, but still have faith in our Web.
-
-- You believe that most jobs should do in a terminal rather than
-  a GUI application.
+Mafa is for you if Mafa has whatever you can make use of.
 
 However, Mafa is *NOT* for you if
 
