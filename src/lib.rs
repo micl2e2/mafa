@@ -24,7 +24,7 @@ pub mod mafadata;
 
 pub mod ev_ntf;
 
-#[cfg(any(feature = "twtl", feature = "gtrans"))]
+#[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
 mod comm;
 
 #[cfg(feature = "twtl")]
@@ -32,6 +32,9 @@ pub mod twtl;
 
 #[cfg(feature = "gtrans")]
 pub mod gtrans;
+
+#[cfg(feature = "camd")]
+pub mod camdict;
 
 #[derive(Debug, Default)]
 pub struct MafaInput {
@@ -412,6 +415,9 @@ There is NO WARRANTY, to the extent permitted by law.";
 
     #[cfg(feature = "gtrans")]
     let cmd_mafa = cmd_mafa.subcommand(gtrans::get_cmd());
+
+    #[cfg(feature = "camd")]
+    let cmd_mafa = cmd_mafa.subcommand(camdict::get_cmd());
 
     let cmd_mafa = cmd_mafa
         .arg(opt_silient)

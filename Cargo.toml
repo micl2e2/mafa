@@ -16,11 +16,12 @@ categories = ["command-line-utilities", "web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-# default = []
-default = ["imode", "gtrans", "twtl"]
+default = []
+# default = ["imode", "gtrans", "twtl"]
 imode = ["dep:rustyline"]
 twtl = ["dep:quick-xml"]
 gtrans = []
+camd = []
 dev = ["wda/dev"]
 tst_twtl_logined = []
 
