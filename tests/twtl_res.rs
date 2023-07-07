@@ -59,7 +59,8 @@ mod twtl_res {
                             // username
                             assert!(ret.contains("mafa_rs"));
                         }
-                        // Err(MafaError::RequireLogin) => {}
+			#[cfg(not(feature = "tst_twtl_logined"))]
+                        Err(MafaError::RequireLogin) =>{}
                         Err(e) => assert!(false, "unexpected error {:?}", e),
                     }
                 }

@@ -92,7 +92,8 @@ mod twtl_err {
                     match ag.handle(Some(likely_failed_cache)) {
                         Ok(res) => assert!(false, "ok: {:?}", res),
                         Err(e) => match e {
-                            // MafaError::RequireLogin |
+			    #[cfg(not(feature = "tst_twtl_logined"))]
+                            MafaError::RequireLogin =>{}
                             MafaError::AllCachesInvalid => {}
                             _ => assert!(false, "unexpected error {:?}", e),
                         },
@@ -139,7 +140,8 @@ mod twtl_err {
                     let mut ag = TwtlClient::new(&mafad, ntf, &mafa_in, twtl_in).expect("must ok");
                     if let Err(e) = ag.handle(None) {
                         match e {
-                            // MafaError::RequireLogin |
+			    #[cfg(not(feature = "tst_twtl_logined"))]
+                            MafaError::RequireLogin =>{}
                             MafaError::AllCachesInvalid => {}
                             _ => assert!(false, "unexpected error {:?}", e),
                         }
