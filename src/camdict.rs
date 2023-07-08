@@ -1023,6 +1023,13 @@ impl CamdClient<'_> {
     ///
     /// Returned `String` is pretty-printed.
     pub fn handle(&mut self, pred_caches: Option<Vec<Vec<u8>>>) -> Result<(EurKind, String)> {
+        // get caches
+
+        // vec![11,1,1,3,3,27,0,1,0,4,0,0,1,2,1,2,0,3,1]
+        // vec![11,1,1,3,3,17,0,1,0,4,0,0,1,2,1,2,0,3]
+        // -> self.cache.push([11,1,1,3,3])
+        //
+
         Ok((EurKind::CamdResult, Default::default()))
     }
 
