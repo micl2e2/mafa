@@ -739,9 +739,9 @@ impl CamdClient<'_> {
         let merged_in = CamdInput::merge(camd_in, mafa_in)?;
         dbgg!(&merged_in);
 
-        if !is_valid_words(&merged_in.words) {
-            return Err(MafaError::InvalidWords);
-        }
+        // if !is_valid_words(&merged_in.words) {
+        //     return Err(MafaError::InvalidWords);
+        // } // FIXME: unnecessary on gtrans
 
         let wda_setts = Self::get_wda_setts(&merged_in);
 
@@ -781,15 +781,10 @@ impl CamdClient<'_> {
         })
     }
 
-    fn upaths_locate(
-        &self,
-        en_words: &str,
-        tc_words: &str,
-        wait_before_extract: u64,
-    ) -> Result<Vec<u8>> {
+    fn upaths_locate(&self, words: &str, expl: &str, wait_before_extract: u64) -> Result<Vec<u8>> {
         let url = format!(
-            "https://translate.google.com/?sl=en&tl=zh-TW&text={}&op=translate",
-            en_words
+            "https://dictionary.cambridge.org/us/dictionary/english/{}",
+            words
         );
 
         if let Err(err_navi) = self.wda.go_url(&url) {
@@ -803,11 +798,11 @@ impl CamdClient<'_> {
 
         sleep(Duration::from_millis(wait_before_extract));
 
-        // script/Camd-upath.js
+        // script/camd-upath.js
         let js_in="console.log=function(){};function locate_elem(e){var o=[];function l(e,n,t){let c=e.childNodes.length;for(let d=0;d<c;d++){let c=e.childNodes[d];if(c.innerText&&c.innerText==n){console.log('yes',c);o=[...t,d]}else{l(c,n,[...t,d])}}}let n=e;l(document.body,n,[]);console.log(o);let t=o.map((()=>document.body));console.log(t);for(let e=0;e<o.length;e++){for(let l=0;l<o[e].length;l++){t[e]=t[e].childNodes[o[e][l]]}}return o}return locate_elem(arguments[0]);";
 
         let js_out;
-        match self.wda.eval(&js_in, vec![tc_words]) {
+        match self.wda.eval(&js_in, vec![expl]) {
             Ok(ret) => js_out = ret,
             Err(err_eval) => {
                 if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_eval {
@@ -853,7 +848,11 @@ impl CamdClient<'_> {
 
         while try_times > 0 {
             if upath1.is_none() {
-                match self.upaths_locate("OMG", "\"我的天啊\"", time_before) {
+                match self.upaths_locate(
+                    "hello",
+                    "\"used when meeting or greeting someone:\"",
+                    time_before,
+                ) {
                     Ok(ret) => {
                         if ret.len() > 0 {
                             upath1 = Some(ret)
@@ -874,7 +873,11 @@ impl CamdClient<'_> {
             }
 
             if upath2.is_none() {
-                match self.upaths_locate("ASAP", "\"盡快\"", time_before) {
+                match self.upaths_locate(
+                    "world",
+                    "\"the earth and all the people, places, and things on it:\"",
+                    time_before,
+                ) {
                     Ok(ret) => {
                         if ret.len() > 0 {
                             upath2 = Some(ret)
@@ -922,6 +925,8 @@ impl CamdClient<'_> {
         let upath1 = upath1.expect("buggy");
         let upath2 = upath2.expect("buggy");
 
+        dbgg!((&upath1, &upath2));
+
         let sig_upath_len = upath1.len();
         if upath2.len() != sig_upath_len {
             return Err(MafaError::CacheRebuildFail(
@@ -942,7 +947,7 @@ impl CamdClient<'_> {
         dbgg!(&comb);
 
         self.mafad
-            .cache_append("Camd", &comb, &format!("{}-", &comb))?;
+            .cache_append("camd", &comb, &format!("{}-", &comb))?;
 
         self.upaths.push(Upath(upath1));
 
@@ -1023,14 +1028,25 @@ impl CamdClient<'_> {
     ///
     /// Returned `String` is pretty-printed.
     pub fn handle(&mut self, pred_caches: Option<Vec<Vec<u8>>>) -> Result<(EurKind, String)> {
-        // get caches
+        // caches
+        if pred_caches.is_none() {
+            self.try_rebuild_cache()?;
+        } else {
+            let pred_caches = pred_caches.ok_or(MafaError::BugFound(4567))?;
+            pred_caches
+                .iter()
+                .for_each(|v| self.upaths.push(Upath(v.clone())));
+        }
+        if self.upaths.len() == 0 {
+            panic!("buggy");
+        }
 
         // vec![11,1,1,3,3,27,0,1,0,4,0,0,1,2,1,2,0,3,1]
         // vec![11,1,1,3,3,17,0,1,0,4,0,0,1,2,1,2,0,3]
         // -> self.cache.push([11,1,1,3,3])
         //
 
-        Ok((EurKind::CamdResult, Default::default()))
+        Ok((EurKind::CamdResult, "_".to_string()))
     }
 
     fn fetch(&self) -> Result<String> {

@@ -1,5 +1,5 @@
 // RELEASE
-// console.log = function() {}
+console.log = function() {}
 
 function locate_elem(given_txt) {
     var upaths = [];
@@ -9,9 +9,8 @@ function locate_elem(given_txt) {
 	    let c = ele.childNodes[i];
 	    if (c.innerText && c.innerText == (txt)) {
 		console.log("yes",c);
-		// upaths = [...rou, i];
-		// return;
-		upaths.push([...rou, i]);
+		upaths = [...rou, i];  // for one upath
+		// upaths.push([...rou, i]); // for many upaths
 	    } else {
 		check_inner_text(c, txt, [...rou, i]);
 	    }
@@ -35,8 +34,8 @@ function locate_elem(given_txt) {
 }
 
 // DEBUG
-locate_elem("used when meeting or greeting someone:");
+// locate_elem("used when meeting or greeting someone:");
 
 // RELEASE
 // DONT FORGET: return  
-// locate_elem(arguments[0]);
+locate_elem(arguments[0]);

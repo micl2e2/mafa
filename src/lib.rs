@@ -34,7 +34,7 @@ pub mod twtl;
 pub mod gtrans;
 
 #[cfg(feature = "camd")]
-pub mod camdict;
+pub mod camd;
 
 #[derive(Debug, Default)]
 pub struct MafaInput {
@@ -417,7 +417,7 @@ There is NO WARRANTY, to the extent permitted by law.";
     let cmd_mafa = cmd_mafa.subcommand(gtrans::get_cmd());
 
     #[cfg(feature = "camd")]
-    let cmd_mafa = cmd_mafa.subcommand(camdict::get_cmd());
+    let cmd_mafa = cmd_mafa.subcommand(camd::get_cmd());
 
     let cmd_mafa = cmd_mafa
         .arg(opt_silient)
