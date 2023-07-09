@@ -51,6 +51,7 @@ pub enum CacheRebuildFailKind {
     UpathNotFound,
     UpathLenNotMatched,
     UpathValNotMatched,
+    UpathLenZero,
 }
 
 pub type Result<T> = core::result::Result<T, MafaError>;

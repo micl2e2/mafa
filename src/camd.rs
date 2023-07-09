@@ -781,7 +781,7 @@ impl CamdClient<'_> {
         })
     }
 
-    fn upaths_locate(&self, words: &str, expl: &str, wait_before_extract: u64) -> Result<Vec<u8>> {
+    fn upath_locate(&self, words: &str, expl: &str, wait_before_extract: u64) -> Result<Vec<u8>> {
         let url = format!(
             "https://dictionary.cambridge.org/us/dictionary/english/{}",
             words
@@ -798,7 +798,7 @@ impl CamdClient<'_> {
 
         sleep(Duration::from_millis(wait_before_extract));
 
-        // script/camd-upath.js
+        // script/camd-upath.js, CHECKED
         let js_in="console.log=function(){};function locate_elem(e){var o=[];function l(e,n,t){let c=e.childNodes.length;for(let d=0;d<c;d++){let c=e.childNodes[d];if(c.innerText&&c.innerText==n){console.log('yes',c);o=[...t,d]}else{l(c,n,[...t,d])}}}let n=e;l(document.body,n,[]);console.log(o);let t=o.map((()=>document.body));console.log(t);for(let e=0;e<o.length;e++){for(let l=0;l<o[e].length;l++){t[e]=t[e].childNodes[o[e][l]]}}return o}return locate_elem(arguments[0]);";
 
         let js_out;
@@ -830,9 +830,9 @@ impl CamdClient<'_> {
         Ok(())
     }
 
-    fn refresh_upath(&mut self, rebuild_cache: bool) -> Result<()> {
-        if !rebuild_cache {
-            let caches_from_files = UpathCache::from_pbuf(self.mafad.pathto_exist_cache("Camd")?)?;
+    fn rebuild_internal(&mut self, is_rebuild: bool) -> Result<()> {
+        if !is_rebuild {
+            let caches_from_files = UpathCache::from_pbuf(self.mafad.pathto_exist_cache("camd")?)?;
             self.upaths = caches_from_files.0;
             return Ok(());
         }
@@ -848,7 +848,7 @@ impl CamdClient<'_> {
 
         while try_times > 0 {
             if upath1.is_none() {
-                match self.upaths_locate(
+                match self.upath_locate(
                     "hello",
                     "\"used when meeting or greeting someone:\"",
                     time_before,
@@ -873,7 +873,7 @@ impl CamdClient<'_> {
             }
 
             if upath2.is_none() {
-                match self.upaths_locate(
+                match self.upath_locate(
                     "world",
                     "\"the earth and all the people, places, and things on it:\"",
                     time_before,
@@ -916,6 +916,7 @@ impl CamdClient<'_> {
 
         dbgg!(&try_times);
 
+        // all must be present
         if upath1.is_none() || upath2.is_none() {
             return Err(MafaError::CacheRebuildFail(
                 CacheRebuildFailKind::UpathNotFound,
@@ -927,22 +928,26 @@ impl CamdClient<'_> {
 
         dbgg!((&upath1, &upath2));
 
-        let sig_upath_len = upath1.len();
-        if upath2.len() != sig_upath_len {
+        if upath1.len() == 0 || upath2.len() == 0 {
             return Err(MafaError::CacheRebuildFail(
-                CacheRebuildFailKind::UpathLenNotMatched,
+                CacheRebuildFailKind::UpathLenZero,
             ));
         }
 
-        for i in 0..sig_upath_len {
-            if upath1[i] != upath2[i] {
-                return Err(MafaError::CacheRebuildFail(
-                    CacheRebuildFailKind::UpathValNotMatched,
-                ));
+        let matched_len = {
+            let mut res = 0;
+            let len = usize::min(upath1.len(), upath2.len());
+            for i in 0..len {
+                if upath1[i] == upath2[i] {
+                    res += 1;
+                } else {
+                    break;
+                }
             }
-        }
+            res
+        };
 
-        let u_part = serde_json::to_string(&upath1).unwrap();
+        let u_part = serde_json::to_string(&upath1[0..matched_len]).unwrap();
         let comb = format!("{}\n", u_part);
         dbgg!(&comb);
 
@@ -990,36 +995,40 @@ impl CamdClient<'_> {
         Ok(jsout)
     }
 
+    ///
+    /// Try to rebuild cache regarding cache mechanism, built cache will be
+    /// put in dedicated file on disk, typically inside $HOME/.mafa. Default to
+    /// read from pre-filled cache file.
     fn try_rebuild_cache(&mut self) -> Result<()> {
-        let mut rebuild_cache = false;
+        let mut is_rebuild = false;
 
         if let CacheMechanism::Remote = self.input.cachm {
             let remote_data = self.cache_on_gh(
-                "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/Camd",
+                "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/camd",
             )?;
 
-            self.mafad.init_cache("Camd", &remote_data)?;
+            self.mafad.init_cache("camd", &remote_data)?;
         } else if let CacheMechanism::Local = self.input.cachm {
             self.mafad.try_init_cache(
-                "Camd",
+                "camd",
                 "[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n-",
             )?;
         } else if let CacheMechanism::No = self.input.cachm {
-            rebuild_cache = true;
+            is_rebuild = true;
         }
 
-        if rebuild_cache {
+        if is_rebuild {
             self.notify(MafaEvent::BuildCache {
                 cate: Category::Camd,
                 is_fin: false,
             })?;
-            self.refresh_upath(true)?;
+            self.rebuild_internal(true)?;
             self.notify(MafaEvent::BuildCache {
                 cate: Category::Camd,
                 is_fin: true,
             })?;
         } else {
-            self.refresh_upath(false)?;
+            self.rebuild_internal(false)?;
         }
 
         Ok(())
