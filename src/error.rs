@@ -38,6 +38,7 @@ pub enum MafaError {
     UpathLenNotMatched,
     UpathValNotMatched,
     TweetNotRecoginized(u8),
+    CamdLevelNotRecoginized(u8),
     CacheCorrupted,
     //
     MafaDataCacheNotFound,
