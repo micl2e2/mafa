@@ -926,7 +926,7 @@ impl CamdClient<'_> {
         let upath1 = upath1.expect("buggy");
         let upath2 = upath2.expect("buggy");
 
-        dbgg!((&upath1, &upath2));
+        dbgmsg!("upath1:{:?} upath2:{:?}", &upath1, &upath2);
 
         if upath1.len() == 0 || upath2.len() == 0 {
             return Err(MafaError::CacheRebuildFail(
@@ -1050,16 +1050,130 @@ impl CamdClient<'_> {
             panic!("buggy");
         }
 
-        // vec![11,1,1,3,3,27,0,1,0,4,0,0,1,2,1,2,0,3,1]
-        // vec![11,1,1,3,3,17,0,1,0,4,0,0,1,2,1,2,0,3]
-        // -> self.cache.push([11,1,1,3,3])
-        //
+        self.notify(MafaEvent::FetchResult {
+            cate: Category::Camd,
+            is_fin: false,
+        })?;
+        let explained = self.fetch(&self.input.words)?;
+        self.notify(MafaEvent::FetchResult {
+            cate: Category::Camd,
+            is_fin: true,
+        })?;
 
-        Ok((EurKind::CamdResult, "_".to_string()))
+        let camd_res = CamdResult::from_str(explained)?;
+        dbgg!(&camd_res);
+
+        Ok((
+            EurKind::CamdResult,
+            explained, // camd_res.pretty_print(
+                       //     self.input.nocolor.is_some(),
+                       //     self.input.ascii,
+                       //     self.input.wrap_width,
+                       // )?,
+        ))
     }
 
-    fn fetch(&self) -> Result<String> {
-        Ok(Default::default())
+    fn fetch(&self, words: &str) -> Result<String> {
+        let url = format!(
+            "https://dictionary.cambridge.org/us/dictionary/english/{}",
+            words
+        );
+
+        let mut res = "???".to_string();
+
+        dbgg!(&self.upaths);
+        let mut upaths_i = 0; // iterate over all upaths
+        let upaths_len = self.upaths.len();
+
+        // script/camd-getres.js
+        let jsin_getres = "console.log=function(){};var send_back=arguments[arguments.length-1];var upath=arguments[0];clearInterval(window['camd-res']);window['camd-res']=setInterval(try_send_back,500);function try_send_back(){var e=document.body;for(let n=0;n<upath.length;n++){if(e==undefined){console.log('undef',n,e);return}else{console.log('following...')}e=e.childNodes[upath[n]]}if(e!=undefined){var n=e.childNodes.length;if(n==0){return}for(let d=0;d<n;d++){let n=e.childNodes[d];if(n.innerText!=undefined&&n.innerText.includes(String.fromCharCode(10)+'Add to word list '+String.fromCharCode(10))){e=e.childNodes[d];break}}console.log('upath & interested',upath,e);let d='';for(let t=0;t<n;t++){let n=e.childNodes[t];if(n!=undefined&&n.nodeType==1){d+='______'+n.innerText}}send_back(d);clearInterval(window['camd-res'])}}";
+
+        let mut is_url_reached = false;
+
+        // try_times = go_url + eval_js
+        let mut try_times = 5; // sufficient to let try again succeed
+
+        // let mut wait_before = 500;
+        let mut wait_before = 10; // time to wait after navi but before eval
+
+        let mut expl_res = "".to_string();
+
+        while try_times > 0 {
+            if let Err(err_navi) = self.wda.go_url(&url) {
+                if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_navi {
+                    if err.contains("timeout") {
+                        self.notify(MafaEvent::ConnectTimeoutRetry {
+                            cate: Category::Camd,
+                            is_fin: false,
+                        })?;
+                        try_times -= 1;
+                        continue;
+                    } else {
+                        return Err(MafaError::WebDrvCmdRejected(err, msg));
+                    }
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_navi));
+                }
+            }
+
+            is_url_reached = true;
+            self.notify(MafaEvent::ConnectTimeoutRetry {
+                cate: Category::Camd,
+                is_fin: true,
+            })?;
+
+            let upath_curr = &self.upaths[upaths_i].0;
+            let arg0 = serde_json::to_string(&upath_curr[..]).unwrap();
+
+            sleep(Duration::from_millis(wait_before));
+
+            match self.wda.eval_async(&jsin_getres, vec![&arg0]) {
+                Ok(retstr) => {
+                    expl_res = retstr;
+                    break; // we done
+                }
+
+                Err(err_eval) => {
+                    if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_eval {
+                        if err.contains("timeout") {
+                            upaths_i += 1;
+                            if upaths_i < upaths_len {
+                                self.notify(MafaEvent::TryNextCache {
+                                    cate: Category::Camd,
+                                    is_fin: false,
+                                })?;
+                                // continue;
+                            } else {
+                                self.notify(MafaEvent::TryNextCache {
+                                    cate: Category::Camd,
+                                    is_fin: true,
+                                })?;
+                                return Err(MafaError::AllCachesInvalid);
+                            }
+                        } else {
+                            return Err(MafaError::WebDrvCmdRejected(err, msg));
+                        }
+                    } else {
+                        return Err(MafaError::UnexpectedWda(err_eval));
+                    }
+                }
+            }
+
+            try_times -= 1;
+            wait_before += wait_before;
+            dbgmsg!("need retry {} {}", try_times, wait_before);
+        }
+
+        self.notify(MafaEvent::TryNextCache {
+            cate: Category::Camd,
+            is_fin: true,
+        })?;
+
+        if !is_url_reached {
+            return Err(MafaError::DataFetchedNotReachable);
+        }
+
+        Ok(expl_res)
     }
 
     //
