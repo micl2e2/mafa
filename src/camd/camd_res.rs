@@ -135,7 +135,11 @@ impl<'a> LevelExpained<'a> {
                 // parse expl
                 let mut one_expl = Expl::default();
                 one_expl.meaning = line;
-                one_expl.nv_cate = if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
+                one_expl.nv_cate = if i - 2 > 0 && is_nv_cate(lines[i - 2]) {
+                    // some are 2L before
+                    Some(lines[i - 2])
+                } else if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
+                    // some are 3L before
                     Some(lines[i - 3])
                 } else {
                     None
@@ -576,6 +580,181 @@ mod tst {
         expl.0.push(Examp {
             usage: "It housed one of the world's important collections of arms and armor.",
             from: "From CNBC",
+        });
+
+        expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
+
+        assert_eq!(camd_res, expected_camd_res);
+
+        dbg!(&camd_res, &expected_camd_res);
+    }
+
+    #[test]
+    fn _3() {
+        let explained = "\"______ \\ndetail\\nnoun\\nUS  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\ndetail noun (INFORMATION)\\nAdd to word list \\nB1 [ C ]\\na single piece of information or fact about something:\\nShe insisted on telling me every single detail of what they did to her in the hospital.\\nWe don't know the full/precise details of the story yet.\\nShe refused to disclose/divulge any details about/of the plan.\\n\u{a0}details [ plural ]\\n \\nA2\\ninformation about someone or something:\\nA police officer took down the details of what happened.\\nSee more\\n \\n[ U ]\\nthe small features of something that you only notice when you look carefully:\\nI was just admiring the detail in the dollhouse - even the cans of food have labels on them.\\nIt's his eye for (= ability to notice) detail that distinguishes him as a painter.\\n\u{a0}in detail\\n \\nB1\\nincluding or considering all the information about something or every part of something:\\nWe haven't discussed the matter in detail yet.\\nSee more\\n\u{a0}go into detail\\n \\nB2\\nto tell or include all the facts about something:\\nI won't go into detail over the phone, but I've been having a few health problems recently.\\nSee more\\n \\n[ C ]\\na part of something that does not seem important:\\nTony says, he's going to get the car, and finding the money to pay for it is just a minor detail.\\n Fewer examples\\nThe model of the village is accurate down to the last detail.\\nHe forgot to tell you one important detail - he's married.\\nIt's only a detail, but could you just add the office phone number at the top of the page?\\nHer paintings are almost photographic in their detail and accuracy.\\nThere is one small detail you've gotten wrong in your report.\\n SMART Vocabulary: related words and phrases\\ndetail noun (GROUP)\\n \\n[ C, + sing/pl verb ]\\na group of people who have been given a particular task\\n SMART Vocabulary: related words and phrases\\n \\ndetail\\nverb\\nUS  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\ndetail verb (GIVE INFORMATION)\\n \\n[ T ] US  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto describe something completely, giving all the facts:\\n[ + question word ] Can you produce a report detailing what we've spent on the project so far?\\n SMART Vocabulary: related words and phrases\\ndetail verb (ORDER)\\n \\n[ T + to infinitive, often passive ] US  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto order someone, often a small group of soldiers or workers, to perform a particular task:\\nFour soldiers were detailed to check the road for troops.\\n SMART Vocabulary: related words and phrases\\ndetail verb (CLEAN CAR)\\n \\n[ T ] US US/ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto clean the inside and outside of a vehicle very carefully:\\nYou can skip the car wash; Rogers has all the equipment to wash and detail your car in your own driveway.\\na car detailing company\\n SMART Vocabulary: related words and phrases\\n(Definition of detail from the Cambridge Advanced Learner's Dictionary & Thesaurus © Cambridge University Press)______detail | INTERMEDIATE ENGLISH\\ndetail\\nnoun\\nUS  /dɪˈteɪl, ˈdi·teɪl/\\ndetail noun (INFORMATION)\\nAdd to word list \\n[ C/U ]\\na particular fact or item of information, often noticed only after giving something your close attention, or such facts or items considered as a group:\\n[ C ] We have a report of a serious accident on Route 23, but so far no details.\\n[ U ] She showed a businesslike attention to detail.\\n[ U ] I can’t go into much detail, but I’ve been having some health problems recently.\\nWe know roughly what he wants to do, but we haven’t discussed his plans in detail (= considering all the particular facts).\\ndetail noun (GROUP)\\n \\n[ C ]\\na small group, esp. of soldiers or police, ordered to perform a particular duty:\\nA detail of five police officers accompanied the diplomat to his hotel.\\ndetailed\\nadjective US  /dɪˈteɪld, ˈdi·teɪld/\\na detailed account/description\\n \\ndetail\\nverb [ T ]\\nUS  /dɪˈteɪl, ˈdi·teɪl/\\ndetail verb [T] (GIVE INFORMATION)\\n \\nto give exact and complete information about something:\\nThe committee members issued a brief statement detailing their plans.\\n(Definition of detail from the Cambridge Academic Content Dictionary © Cambridge University Press)______EXAMPLES of detail\\ndetail\\nHe sent a letter detailing the problems to the manufacturer.\\nFrom Voice of America\\nThey have not released any details about a motive.\\nFrom ABC News\\nThis will detail how to take actions like blocking users, for example.\\nFrom TechCrunch\\nShe had signs of trauma on her body; but, police are not releasing details.\\nFrom CBS Local\\nOne reason may be the terribly unsexy details of the employee-ownership structure.\\nFrom The Atlantic\\nWe are seeking more details from the district and will post them here when available.\\nFrom cleveland.com\\nSome details of the episode, though, remain murky.\\nFrom Washington Post\\nWe'll note where the two disagree on the details.\\nFrom VentureBeat\\nTimes staffers will be there to bring you the details.\\nFrom Los Angeles Times\\nI was very impressed with the level of detail he had maintained during the restoration.\\nFrom USA TODAY\\nA spokesman said there were \\\"no immediate details\\\" on the nature of the threat, saying the call came in around 12:15 p.m.\\nFrom Washington Post\\nHow do other people and entire communities come to care about species about whose biological details they might not know?\\nFrom Phys.Org\\nShe is gifted with language and is able to layer difficult details in such a way that the result is smooth as water.\\nFrom NPR\\nTheir older parents want to speak about the logistics of death in detail.\\nFrom Huffington Post\\nThese examples are from corpora and from sources on the web. Any opinions in the examples do not represent the opinion of the Cambridge Dictionary editors or of Cambridge University Press or its licensors.______COLLOCATIONS with detail\\ndetail\\n\\nThese are words often used in combination with detail.\\n\\nClick on a collocation to see more examples of it.\\n\\naccurate detail\\nThough the story is fictional, recent scholarship has uncovered a greater measure of historically accurate detail in its setting than had previously been realized.\\nFrom the Cambridge English Corpus\\n\u{a0}\\nadditional detail\\nExtended response that contains additional detail that is irrelevant, repetitive or bizarre.\\nFrom the Cambridge English Corpus\\n\u{a0}\\nadministrative detail\\nSuch policies cannot just be legislated; they must be worked out in administrative detail.\\nFrom the Cambridge English Corpus\\n\u{a0}\\nThese examples are from corpora and from sources on the web. Any opinions in the examples do not represent the opinion of the Cambridge Dictionary editors or of Cambridge University Press or its licensors.\\nSee all collocations with detail______What is the pronunciation of detail?______\u{a0}\"";
+
+        let camd_res = CamdResult::from_str("detail", &explained).expect("bug");
+
+        let mut expected_camd_res = CamdResult(vec![]);
+
+        // primary one
+        let mut expl = DefaultExpl::default();
+        expl.is_interme = false;
+        expl.is_busi = false;
+        expl.pronun = "US  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/";
+        expl.expls.push(Expl {
+            meaning: "a single piece of information or fact about something:",
+            usages: vec![
+                "She insisted on telling me every single detail of what they did to her in the hospital.",
+                "We don't know the full/precise details of the story yet.",
+                "She refused to disclose/divulge any details about/of the plan.",
+		"\u{a0}details [ plural ]"
+            ],
+            nv_cate: Some("detail noun (INFORMATION)"),
+        });
+        expl.expls.push(Expl {
+            meaning: "information about someone or something:",
+            usages: vec!["A police officer took down the details of what happened."],
+            nv_cate: None,
+        });
+        expl.expls.push(Expl {
+            meaning: "the small features of something that you only notice when you look carefully:",
+            usages: vec![
+                "I was just admiring the detail in the dollhouse - even the cans of food have labels on them.",
+		"It's his eye for (= ability to notice) detail that distinguishes him as a painter.",
+		"\u{a0}in detail"
+            ],
+            nv_cate: None
+        });
+        expl.expls.push(Expl {
+            meaning: "including or considering all the information about something or every part of something:",
+            usages: vec![
+                "We haven't discussed the matter in detail yet.",
+            ],
+            nv_cate: None
+        });
+        expl.expls.push(Expl {
+            meaning: "to tell or include all the facts about something:",
+            usages: vec!["I won't go into detail over the phone, but I've been having a few health problems recently."],
+            nv_cate: None
+        });
+        expl.expls.push(Expl {
+            meaning: "a part of something that does not seem important:",
+            usages: vec!["Tony says, he's going to get the car, and finding the money to pay for it is just a minor detail."," Fewer examples","The model of the village is accurate down to the last detail.","He forgot to tell you one important detail - he's married.","It's only a detail, but could you just add the office phone number at the top of the page?","Her paintings are almost photographic in their detail and accuracy.","There is one small detail you've gotten wrong in your report."],
+            nv_cate: None,
+        });
+        // have no trailing punctuation
+        // expl.expls.push(Expl {
+        //     meaning: "a group of people who have been given a particular task",
+        //     usages: vec![],
+        //     nv_cate: Some("detail noun (GROUP)"),
+        // });
+        expl.expls.push(Expl {
+            meaning: "to describe something completely, giving all the facts:",
+            usages: vec!["[ + question word ] Can you produce a report detailing what we've spent on the project so far?"],
+            nv_cate: Some("detail verb (GIVE INFORMATION)"),
+        });
+        expl.expls.push(Expl {
+            meaning: "to order someone, often a small group of soldiers or workers, to perform a particular task:",
+            usages: vec!["Four soldiers were detailed to check the road for troops."],
+            nv_cate: Some("detail verb (ORDER)"),
+        });
+        expl.expls.push(Expl {
+            meaning: "to clean the inside and outside of a vehicle very carefully:",
+            usages: vec!["You can skip the car wash; Rogers has all the equipment to wash and detail your car in your own driveway.","a car detailing company"],
+            nv_cate: Some("detail verb (CLEAN CAR)"),
+        });
+
+        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+
+        // intermediate one
+        let mut expl = DefaultExpl::default();
+        expl.is_interme = true;
+        expl.is_busi = false;
+        expl.pronun = "US  /dɪˈteɪl, ˈdi·teɪl/";
+        expl.expls.push(Expl {
+            meaning: "a particular fact or item of information, often noticed only after giving something your close attention, or such facts or items considered as a group:",
+            usages: vec![
+                "[ C ] We have a report of a serious accident on Route 23, but so far no details.",
+                "[ U ] She showed a businesslike attention to detail.","[ U ] I can’t go into much detail, but I’ve been having some health problems recently.",
+		"We know roughly what he wants to do, but we haven’t discussed his plans in detail (= considering all the particular facts)."
+            ],
+            nv_cate: Some("detail noun (INFORMATION)"),
+        });
+        expl.expls.push(Expl {
+            meaning:
+                "a small group, esp. of soldiers or police, ordered to perform a particular duty:",
+            usages: vec![
+                "A detail of five police officers accompanied the diplomat to his hotel.",
+                "detailed",
+            ],
+            nv_cate: Some("detail noun (GROUP)"),
+        });
+        expl.expls.push(Expl {
+            meaning: "to give exact and complete information about something:",
+            usages: vec!["The committee members issued a brief statement detailing their plans."],
+            nv_cate: Some("detail verb [T] (GIVE INFORMATION)"),
+        });
+
+        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+
+        // examples
+        let mut expl = RealExamp::default();
+        expl.0.push(Examp {
+            usage: "He sent a letter detailing the problems to the manufacturer.",
+            from: "From Voice of America",
+        });
+        expl.0.push(Examp {
+            usage: "They have not released any details about a motive.",
+            from: "From ABC News",
+        });
+        expl.0.push(Examp {
+            usage: "This will detail how to take actions like blocking users, for example.",
+            from: "From TechCrunch",
+        });
+        expl.0.push(Examp {
+            usage: "She had signs of trauma on her body; but, police are not releasing details.",
+            from: "From CBS Local",
+        });
+        expl.0.push(Examp {
+            usage: "One reason may be the terribly unsexy details of the employee-ownership structure.",
+            from: "From The Atlantic",
+        });
+        expl.0.push(Examp {
+            usage: "We are seeking more details from the district and will post them here when available.",
+            from: "From cleveland.com",
+        });
+        expl.0.push(Examp {
+            usage: "Some details of the episode, though, remain murky.",
+            from: "From Washington Post",
+        });
+        expl.0.push(Examp {
+            usage: "We'll note where the two disagree on the details.",
+            from: "From VentureBeat",
+        });
+        expl.0.push(Examp {
+            usage: "Times staffers will be there to bring you the details.",
+            from: "From Los Angeles Times",
+        });
+        expl.0.push(Examp {
+            usage: "I was very impressed with the level of detail he had maintained during the restoration.",
+            from: "From USA TODAY",
+        });
+        expl.0.push(Examp {
+            usage: "A spokesman said there were \\\"no immediate details\\\" on the nature of the threat, saying the call came in around 12:15 p.m.",
+            from: "From Washington Post",
+        });
+        expl.0.push(Examp {
+            usage: "How do other people and entire communities come to care about species about whose biological details they might not know?",
+            from: "From Phys.Org",
+        });
+        expl.0.push(Examp {
+            usage: "She is gifted with language and is able to layer difficult details in such a way that the result is smooth as water.",
+            from: "From NPR",
+        });
+        expl.0.push(Examp {
+            usage: "Their older parents want to speak about the logistics of death in detail.",
+            from: "From Huffington Post",
         });
 
         expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
