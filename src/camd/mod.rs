@@ -1063,7 +1063,7 @@ impl CamdClient<'_> {
             is_fin: true,
         })?;
 
-        let camd_res = CamdResult::from_string(explained)?;
+        let camd_res = CamdResult::from_str(&explained)?;
         dbgg!(&camd_res);
 
         Ok((
