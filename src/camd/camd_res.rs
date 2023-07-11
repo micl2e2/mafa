@@ -87,23 +87,24 @@ impl DefaultExpl<'_> {
     fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
         let mut output = String::default();
 
+        let mut part_hdl = String::default();
         if self.is_interme {
-            output += if nocolor { "" } else { "\x1b[31;1m" };
-            output += if asciiful { "---" } else { "───" };
-            output += " I N T E R M E D I A T E ";
-            output += if asciiful { "---" } else { "───" };
-            output += if nocolor { "" } else { "\x1b[0m" };
-            output += "\n";
+            part_hdl += if nocolor { "" } else { "\x1b[31;1m" };
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += " I N T E R M E D I A T E ";
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += if nocolor { "" } else { "\x1b[0m" };
+            part_hdl += "\n";
         }
         if self.is_busi {
-            output += if nocolor { "" } else { "\x1b[31;1m" };
-            output += if asciiful { "---" } else { "───" };
-            output += " B U S I N E S S ";
-            output += if asciiful { "---" } else { "───" };
-            output += if nocolor { "" } else { "\x1b[0m" };
-            output += "\n";
+            part_hdl += if nocolor { "" } else { "\x1b[31;1m" };
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += " B U S I N E S S ";
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += if nocolor { "" } else { "\x1b[0m" };
+            part_hdl += "\n";
         }
-        output += "\n";
+        part_hdl += "\n";
 
         // currently omit pronun
         // output += self.pronun;
@@ -114,7 +115,14 @@ impl DefaultExpl<'_> {
             output += "\n";
         }
 
-        Ok(output)
+        if output.trim().len() == 0 {
+            Ok(String::default())
+        } else {
+            output = part_hdl + &output;
+            Ok(output)
+        }
+
+        // Ok(output)
     }
 }
 
@@ -217,7 +225,9 @@ impl Examp<'_> {
         let mut part_a_usage = String::default();
         part_a_usage += "- ";
         let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
-        part_a_usage += if nocolor { "" } else { "\x1b[1m" };
+        // FIXME: bwrap buggy on case where not `\x1b[29;1m` but `\x1b[1m`,
+        //        sample input is `odds`
+        part_a_usage += if nocolor { "" } else { "\x1b[29;1m" };
         part_a_usage += self.from;
         part_a_usage += if nocolor { "" } else { "\x1b[0m" };
         part_a_usage += ": ";
@@ -240,7 +250,7 @@ impl Examp<'_> {
 
 #[derive(Debug, PartialEq)]
 pub enum LevelExpained<'a> {
-    DefaultKind(DefaultExpl<'a>),
+    DefaultKind(DefaultExpl<'a>, &'a str),
     RealExampKind(RealExamp<'a>),
 }
 
@@ -266,6 +276,14 @@ impl<'a> LevelExpained<'a> {
         }
         dbgg!(&lines);
 
+        if lines.len() < 2 {
+            return Err(MafaError::CamdLevelNotRecoginized(2));
+        }
+        if lines[1].len() == 0 {
+            return Err(MafaError::CamdLevelNotRecoginized(3));
+        }
+        let corrected_word = lines[1]; // e.g. fewer -> few
+
         let mut li_awl = usize::MAX; // Add to word list
         let re_awl = Regex::new("Add to word list ").expect("bug");
 
@@ -278,14 +296,19 @@ impl<'a> LevelExpained<'a> {
 
         if li_awl < usize::MAX {
             // default, intermediate, business
-            Self::from_str_internal_default(word, lines, li_awl)
+            Self::from_str_internal_default(corrected_word, s, lines, li_awl)
         } else {
             // examples
-            Self::from_str_internal_examples(word, lines)
+            Self::from_str_internal_examples(corrected_word, lines)
         }
     }
 
-    fn from_str_internal_default(word: &str, lines: Vec<&'a str>, li_awl: usize) -> Result<Self> {
+    fn from_str_internal_default(
+        word: &str,
+        s: &'a str,
+        lines: Vec<&'a str>,
+        li_awl: usize,
+    ) -> Result<Self> {
         let mut ret = DefaultExpl::default();
 
         // which kind
@@ -405,7 +428,7 @@ impl<'a> LevelExpained<'a> {
 
         dbgg!(&ret);
 
-        Ok(LevelExpained::DefaultKind(ret))
+        Ok(LevelExpained::DefaultKind(ret, s))
     }
 
     fn from_str_internal_examples(word: &str, lines: Vec<&'a str>) -> Result<Self> {
@@ -448,11 +471,26 @@ impl<'a> LevelExpained<'a> {
         let mut output = String::default();
 
         match self {
-            LevelExpained::DefaultKind(expl) => {
-                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+            LevelExpained::DefaultKind(expl, s) => {
+                let pres = expl.pretty_print(nocolor, asciiful, wrap_width)?;
+                if pres.trim().len() == 0 {
+                    output += if nocolor { "" } else { "\x1b[31;1m" };
+                    output += "\n<UNSUPPORTED>\n";
+                    output += if nocolor { "" } else { "\x1b[0m" };
+
+                    output += if nocolor { "" } else { "\x1b[33m" };
+                    output += &comm::make_printable(s);
+                    output += if nocolor { "" } else { "\x1b[0m" };
+
+                    output += if nocolor { "" } else { "\x1b[31;1m" };
+                    output += "\n<UNSUPPORTED>\n";
+                    output += if nocolor { "" } else { "\x1b[0m" };
+                } else {
+                    output += &pres;
+                }
             }
             LevelExpained::RealExampKind(expl) => {
-                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?;
             }
         }
 
@@ -461,10 +499,10 @@ impl<'a> LevelExpained<'a> {
 }
 
 #[derive(Debug, Default, PartialEq)]
-pub struct CamdResult<'a>(Vec<LevelExpained<'a>>);
+pub struct CamdResult<'w, 's>(&'w str, Vec<LevelExpained<'s>>);
 
-impl<'a> CamdResult<'a> {
-    pub fn from_str(word: &str, s: &'a str) -> Result<Self> {
+impl<'w, 's> CamdResult<'w, 's> {
+    pub fn from_str(word: &'w str, s: &'s str) -> Result<Self> {
         let bytes = s.as_bytes();
         let mut lv_expl_list = Vec::<&str>::new();
 
@@ -495,9 +533,10 @@ impl<'a> CamdResult<'a> {
         let mut ret = Self::default();
         for lv_expl in lv_expl_list {
             if let Ok(obj) = LevelExpained::from_str(word, lv_expl) {
-                ret.0.push(obj);
+                ret.1.push(obj);
             }
         }
+        ret.0 = word;
 
         Ok(ret)
     }
@@ -510,15 +549,15 @@ impl<'a> CamdResult<'a> {
         };
 
         let header_part = if asciiful {
-            format!(" Result |")
+            format!(" RESULT |")
         } else {
-            format!(" Result │")
+            format!(" RESULT │")
         };
 
         let header_part_colorful = if asciiful {
-            format!(" \x1b[36;1mResult\x1b[0m |")
+            format!(" \x1b[36;1mRESULT\x1b[0m |")
         } else {
-            format!(" \x1b[36;1mResult\x1b[0m │")
+            format!(" \x1b[36;1mRESULT\x1b[0m │")
         };
 
         // dbgg!(&header_part);
@@ -560,8 +599,19 @@ impl<'a> CamdResult<'a> {
         ); // bottom needs extra line_comp to reach 80
         output += "\n";
 
-        for lv_expl in &self.0 {
-            output += &lv_expl.pretty_print(nocolor, asciiful, wrap_width)?;
+        // the word user quest
+        output += "? ";
+        output += self.0;
+        output += " ?";
+        output += "\n";
+
+        for lv_expl in &self.1 {
+            let pres = &lv_expl.pretty_print(nocolor, asciiful, wrap_width)?;
+            if pres.len() == 0 {
+                output += "<UNSUPPORTED>\n";
+            } else {
+                output += pres;
+            }
         }
 
         Ok(output)

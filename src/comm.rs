@@ -85,3 +85,12 @@ pub(crate) fn make_readable(s: &str) -> String {
 
     s2
 }
+
+pub(crate) fn make_printable(s: &str) -> String {
+    let s1 = s.trim();
+    let s2 = s1.replace(r#"\""#, r#"""#);
+    let s3 = s2.replace(r#"\n"#, "\n");
+    let s4 = s3.trim().to_string();
+
+    s4
+}
