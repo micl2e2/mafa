@@ -1068,11 +1068,15 @@ impl CamdClient<'_> {
 
         Ok((
             EurKind::CamdResult,
-            "_".to_string(), // camd_res.pretty_print(
-                             //     self.input.nocolor.is_some(),
-                             //     self.input.ascii,
-                             //     self.input.wrap_width,
-                             // )?,
+            camd_res.pretty_print(
+                self.input.nocolor.is_some(),
+                self.input.ascii,
+                self.input.wrap_width.into(),
+            )?, // "_".to_string(), // camd_res.pretty_print(
+                //     self.input.nocolor.is_some(),
+                //     self.input.ascii,
+                //     self.input.wrap_width,
+                // )?,
         ))
     }
 

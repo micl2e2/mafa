@@ -1,5 +1,7 @@
 use regex::Regex;
+use unicode_width::UnicodeWidthStr;
 
+use crate::comm;
 use crate::error::Result;
 use crate::MafaError;
 
@@ -81,6 +83,41 @@ pub struct DefaultExpl<'a> {
     expls: Vec<Expl<'a>>,
 }
 
+impl DefaultExpl<'_> {
+    fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let mut output = String::default();
+
+        if self.is_interme {
+            output += if nocolor { "" } else { "\x1b[31;1m" };
+            output += if asciiful { "---" } else { "───" };
+            output += " I N T E R M E D I A T E ";
+            output += if asciiful { "---" } else { "───" };
+            output += if nocolor { "" } else { "\x1b[0m" };
+            output += "\n";
+        }
+        if self.is_busi {
+            output += if nocolor { "" } else { "\x1b[31;1m" };
+            output += if asciiful { "---" } else { "───" };
+            output += " B U S I N E S S ";
+            output += if asciiful { "---" } else { "───" };
+            output += if nocolor { "" } else { "\x1b[0m" };
+            output += "\n";
+        }
+        output += "\n";
+
+        // currently omit pronun
+        // output += self.pronun;
+        // output += "\n";
+
+        for expl in &self.expls {
+            output += &expl.pretty_print(nocolor, asciiful, wrap_width)?;
+            output += "\n";
+        }
+
+        Ok(output)
+    }
+}
+
 // #[derive(Debug, Default)]
 // pub struct IntermeExpl<'a> {
 //     pronun: &'a str,
@@ -89,6 +126,26 @@ pub struct DefaultExpl<'a> {
 
 #[derive(Debug, Default, PartialEq)]
 pub struct RealExamp<'a>(Vec<Examp<'a>>);
+impl RealExamp<'_> {
+    fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let mut output = String::default();
+
+        output += if nocolor { "" } else { "\x1b[31;1m" };
+        output += if asciiful { "---" } else { "───" };
+        output += " E X A M P L E S ";
+        output += if asciiful { "---" } else { "───" };
+        output += if nocolor { "" } else { "\x1b[0m" };
+        output += "\n";
+        output += "\n";
+
+        for ele in &self.0 {
+            output += &ele.pretty_print(nocolor, asciiful, wrap_width)?;
+            output += "\n";
+        }
+
+        Ok(output)
+    }
+}
 
 #[derive(Debug, Default, PartialEq)]
 struct Expl<'a> {
@@ -96,11 +153,89 @@ struct Expl<'a> {
     meaning: &'a str,
     usages: Vec<&'a str>,
 }
+impl Expl<'_> {
+    fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let mut output = String::default();
+
+        // meaning (need wrap) (need readable)
+        let mut part_meaning = "".to_string();
+        part_meaning += if asciiful { "* " } else { "✪ " };
+        let w_leading = UnicodeWidthStr::width(part_meaning.as_str());
+        part_meaning += if nocolor { "" } else { "\x1b[1m" };
+        part_meaning += &comm::make_readable(self.meaning);
+        part_meaning += if nocolor { "" } else { "\x1b[0m" };
+        let mut wrapper = bwrap::EasyWrapper::new(&part_meaning, wrap_width - w_leading).unwrap();
+        let txt_leading = comm::replicate(" ", w_leading);
+        let wrapped_part_meaning = wrapper
+            .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
+                &txt_leading,
+                bwrap::ExistNlPref::KeepTrailSpc,
+            ))
+            .unwrap();
+        output += &wrapped_part_meaning;
+        output += "\n";
+
+        // label (need readable)
+        if let Some(v) = self.nv_cate {
+            output += "- HINT: ";
+            output += &comm::make_readable(v);
+            output += "\n";
+        }
+
+        // usages (need wrap) (need readable)
+        for a_usage in &self.usages {
+            let mut part_a_usage = String::default();
+            part_a_usage += "- ";
+            let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
+            part_a_usage += &comm::make_readable(a_usage);
+            let mut wrapper =
+                bwrap::EasyWrapper::new(&part_a_usage, wrap_width - w_leading).unwrap();
+            let txt_leading = comm::replicate(" ", w_leading);
+            let wrapped_part_a_usage = wrapper
+                .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
+                    &txt_leading,
+                    bwrap::ExistNlPref::KeepTrailSpc,
+                ))
+                .unwrap();
+            output += &wrapped_part_a_usage;
+            output += "\n";
+        }
+
+        Ok(output)
+    }
+}
 
 #[derive(Debug, Default, PartialEq)]
 struct Examp<'a> {
     usage: &'a str,
     from: &'a str,
+}
+impl Examp<'_> {
+    fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let mut output = String::default();
+
+        let mut part_a_usage = String::default();
+        part_a_usage += "- ";
+        let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
+        part_a_usage += if nocolor { "" } else { "\x1b[1m" };
+        part_a_usage += self.from;
+        part_a_usage += if nocolor { "" } else { "\x1b[0m" };
+        part_a_usage += ": ";
+        part_a_usage += &comm::make_readable(self.usage);
+
+        let mut wrapper = bwrap::EasyWrapper::new(&part_a_usage, wrap_width - w_leading).unwrap();
+        let txt_leading = comm::replicate(" ", w_leading);
+        let wrapped_part_a_usage = wrapper
+            .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
+                &txt_leading,
+                bwrap::ExistNlPref::KeepTrailSpc,
+            ))
+            .unwrap();
+
+        output += &wrapped_part_a_usage;
+
+        Ok(output)
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -214,60 +349,57 @@ impl<'a> LevelExpained<'a> {
             }
             let line = lines[i];
             let re_meaning = Regex::new(".*:$").expect("bug");
-            let re_meaning_only = Regex::new(r#".*(\.|"|\?|!)$"#).expect("bug");
+            // let re_meaning_only = Regex::new(r#".*(\.|"|\?|!)$"#).expect("bug");
             let re_usage = Regex::new(&format!(r#"{}.*(\.|"|\?|!)$"#, word)).expect("bug");
             let re_fewer_examples = Regex::new("Fewer examples").expect("bug");
 
+            let re_unusable = Regex::new("\u{a0}").expect("bug");
+
             if re_meaning.is_match(line) {
+                dbgg!(&line);
                 // parse expl
                 let mut one_expl = Expl::default();
                 one_expl.meaning = line;
                 one_expl.nv_cate = if i - 2 > 0 && is_label(lines[i - 2]) {
-                    // some are 2L before
-                    Some(lines[i - 2])
+                    Some(lines[i - 2]) // some are 2L before
                 } else if i - 3 > 0 && is_label(lines[i - 3]) {
-                    // some are 3L before
-                    Some(lines[i - 3])
+                    Some(lines[i - 3]) // some are 3L before
                 } else {
                     None
                 };
-                // one_expl.nv_cate = if i - 2 > 0 && is_nv_cate(lines[i - 2]) {
-                //     // some are 2L before
-                //     Some(lines[i - 2])
-                // } else if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
-                //     // some are 3L before
-                //     Some(lines[i - 3])
-                // } else {
-                //     None
-                // };
                 if i + 1 < lines.len() {
                     for j in i + 1..lines.len() {
                         if is_nv_cate(lines[j]) {
                             continue;
                         }
                         let nex_line_s = lines[j].to_ascii_lowercase();
-                        if nex_line_s.contains(word) && !is_label(&nex_line_s) {
+                        if nex_line_s.contains(word)
+                            && !is_label(&nex_line_s)
+                            && !re_unusable.is_match(lines[j])
+                        {
                             one_expl.usages.push(lines[j]);
                             i += 1;
-                        } else if re_fewer_examples.is_match(lines[j]) {
-                            one_expl.usages.push(lines[j]);
-                            // we currently blindly include fewer examples
-                            // and all of them will be thrown into last
-                            // elem of usages
-                            i += 1;
+                        // }
+                        // else if re_fewer_examples.is_match(lines[j]) {
+                        // one_expl.usages.push(lines[j]);
+                        // we currently blindly include fewer examples
+                        // and all of them will be thrown into last
+                        // elem of usages
+                        // i += 1;
                         } else {
                             dbgg!(lines[j]);
                             break;
                         }
                     }
-                    dbgg!(&one_expl);
                 }
-                ret.expls.push(one_expl);
-            } else if re_meaning_only.is_match(line) {
-                let mut one_expl = Expl::default();
-                one_expl.meaning = line;
+                dbgg!(&one_expl);
                 ret.expls.push(one_expl);
             }
+            // else if re_meaning_only.is_match(line) {
+            //     let mut one_expl = Expl::default();
+            //     one_expl.meaning = line;
+            //     ret.expls.push(one_expl);
+            // }
             i += 1;
         }
 
@@ -307,6 +439,24 @@ impl<'a> LevelExpained<'a> {
         }
 
         Ok(LevelExpained::RealExampKind(ret))
+    }
+
+    ///
+    /// Note that all `pretty_print` should not handle their own LF, but leave
+    /// the job to their parents.
+    pub fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let mut output = String::default();
+
+        match self {
+            LevelExpained::DefaultKind(expl) => {
+                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+            }
+            LevelExpained::RealExampKind(expl) => {
+                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+            }
+        }
+
+        Ok(output)
     }
 }
 
@@ -350,6 +500,71 @@ impl<'a> CamdResult<'a> {
         }
 
         Ok(ret)
+    }
+
+    pub fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
+        let wrap_width: usize = if wrap_width > 17 {
+            wrap_width.into()
+        } else {
+            80
+        };
+
+        let header_part = if asciiful {
+            format!(" Result |")
+        } else {
+            format!(" Result │")
+        };
+
+        let header_part_colorful = if asciiful {
+            format!(" \x1b[36;1mResult\x1b[0m |")
+        } else {
+            format!(" \x1b[36;1mResult\x1b[0m │")
+        };
+
+        // dbgg!(&header_part);
+
+        let cols_header_part = UnicodeWidthStr::width(header_part.as_str());
+
+        let mut output = String::from("");
+
+        // 0 for top, 1 for bottom
+        let line_comp = if asciiful { "-" } else { "─" };
+        let line_tail_comp = if asciiful { ("-", "-") } else { ("╮", "┴") };
+
+        let cols_line_comp = UnicodeWidthStr::width(line_comp);
+        let rtimes_line_comp = (cols_header_part / cols_line_comp) - 1;
+
+        // top line
+        let top_line = comm::replicate(line_comp, rtimes_line_comp);
+        output += &top_line;
+        output += line_tail_comp.0;
+        output += "\n";
+
+        output += if nocolor {
+            &header_part
+        } else {
+            &header_part_colorful
+        };
+        output += "\n";
+
+        // bottom line
+        let bottom_line = comm::replicate(line_comp, rtimes_line_comp);
+        output += &bottom_line;
+        output += line_tail_comp.1;
+        output += &comm::replicate(
+            line_comp,
+            (wrap_width
+                - cols_line_comp * rtimes_line_comp
+                - UnicodeWidthStr::width(line_tail_comp.1))
+                / cols_line_comp,
+        ); // bottom needs extra line_comp to reach 80
+        output += "\n";
+
+        for lv_expl in &self.0 {
+            output += &lv_expl.pretty_print(nocolor, asciiful, wrap_width)?;
+        }
+
+        Ok(output)
     }
 }
 
@@ -405,12 +620,12 @@ mod tst {
             meaning: "an expression of surprise:",
             usages: vec![
                 "Hello, this is very strange - I know that man.",
-                " Fewer examples",
-                "Cathy poked her head round the door to say hello.",
-                "When he said hello, I felt my face turn bright red.",
-                "Hello - could I speak to Ann, please?",
-                "After we'd said our hellos, it all went quiet and nobody knew what to do.",
-                "Oh, hello - what are you doing in here?",
+                // " Fewer examples",
+                // "Cathy poked her head round the door to say hello.",
+                // "When he said hello, I felt my face turn bright red.",
+                // "Hello - could I speak to Ann, please?",
+                // "After we'd said our hellos, it all went quiet and nobody knew what to do.",
+                // "Oh, hello - what are you doing in here?",
             ],
             nv_cate: None,
         });
@@ -429,13 +644,14 @@ mod tst {
                 "I know her vaguely – we’ve exchanged hellos a few times.",
                 "Come and say hello to my friends (= meet them).",
             ],
-            nv_cate: None,
+            nv_cate: Some("plural hellos"),
         });
-        expl.expls.push(Expl {
-            meaning: "Hello is also said at the beginning of a telephone conversation.",
-            usages: vec![],
-            nv_cate: None,
-        });
+        // parsing meaning-only is not supported currently
+        // expl.expls.push(Expl {
+        //     meaning: "Hello is also said at the beginning of a telephone conversation.",
+        //     usages: vec![],
+        //     nv_cate: None,
+        // });
         expl.expls.push(Expl {
             meaning: "Hello is also used to attract someone’s attention:",
             usages: vec![
@@ -521,13 +737,13 @@ mod tst {
                 "News of the disaster shocked the (whole/entire) world.",
                 "We live in a changing world and people must learn to adapt.",
                 "She's a world authority on fetal development.",
-		"a world record/championship",
-                " Fewer examples",
-                "People from different cultures have different conceptions of the world.",
-		"The richer countries of the world should take concerted action to help the poorer countries.",
-		"I'm flirting with the idea of taking a year off and traveling round the world.",
-		"He's one of the highest-earning professional golfers in the world.",
-		"The museum's collection includes works of art from all around the world.",
+                "a world record/championship",
+                // " Fewer examples",
+                // "People from different cultures have different conceptions of the world.",
+                // "The richer countries of the world should take concerted action to help the poorer countries.",
+                // "I'm flirting with the idea of taking a year off and traveling round the world.",
+                // "He's one of the highest-earning professional golfers in the world.",
+                // "The museum's collection includes works of art from all around the world.",
             ],
             nv_cate: Some("world noun (THE EARTH)"),
         });
@@ -707,7 +923,7 @@ mod tst {
             usages: vec![
                 "I was just admiring the detail in the dollhouse - even the cans of food have labels on them.",
 		"It's his eye for (= ability to notice) detail that distinguishes him as a painter.",
-		"\u{a0}in detail"
+		// "\u{a0}in detail"
             ],
             nv_cate: None
         });
@@ -725,10 +941,18 @@ mod tst {
         });
         expl.expls.push(Expl {
             meaning: "a part of something that does not seem important:",
-            usages: vec!["Tony says, he's going to get the car, and finding the money to pay for it is just a minor detail."," Fewer examples","The model of the village is accurate down to the last detail.","He forgot to tell you one important detail - he's married.","It's only a detail, but could you just add the office phone number at the top of the page?","Her paintings are almost photographic in their detail and accuracy.","There is one small detail you've gotten wrong in your report."],
+            usages: vec![
+		"Tony says, he's going to get the car, and finding the money to pay for it is just a minor detail.",
+		// " Fewer examples",
+		// "The model of the village is accurate down to the last detail.",
+		// "He forgot to tell you one important detail - he's married.",
+		// "It's only a detail, but could you just add the office phone number at the top of the page?",
+		// "Her paintings are almost photographic in their detail and accuracy.",
+		// "There is one small detail you've gotten wrong in your report."
+	    ],
             nv_cate: None,
         });
-        // have no trailing punctuation
+        // no trailing punctuation
         // expl.expls.push(Expl {
         //     meaning: "a group of people who have been given a particular task",
         //     usages: vec![],
