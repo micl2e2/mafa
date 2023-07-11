@@ -18,10 +18,7 @@ pub struct DefaultExpl<'a> {
 // }
 
 #[derive(Debug, Default, PartialEq)]
-pub struct ExampExpl<'a> {
-    pronun: &'a str,
-    expls: Vec<Expl<'a>>,
-}
+pub struct RealExamp<'a>(Vec<Examp<'a>>);
 
 #[derive(Debug, Default, PartialEq)]
 struct Expl<'a> {
@@ -29,10 +26,16 @@ struct Expl<'a> {
     usages: Vec<&'a str>,
 }
 
+#[derive(Debug, Default, PartialEq)]
+struct Examp<'a> {
+    usage: &'a str,
+    from: &'a str,
+}
+
 #[derive(Debug, PartialEq)]
 pub enum LevelExpained<'a> {
     DefaultKind(DefaultExpl<'a>),
-    ExamplesKind(ExampExpl<'a>),
+    RealExampKind(RealExamp<'a>),
 }
 
 impl<'a> LevelExpained<'a> {
@@ -76,8 +79,37 @@ impl<'a> LevelExpained<'a> {
         }
     }
 
-    fn from_str_internal_examples(word: &str, lines: Vec<&str>) -> Result<Self> {
-        Ok(LevelExpained::DefaultKind(Default::default()))
+    fn from_str_internal_examples(word: &str, lines: Vec<&'a str>) -> Result<Self> {
+        let mut ret = RealExamp::default();
+
+        if lines.len() < 3 {
+            return Err(MafaError::CamdLevelNotRecoginized(1));
+        }
+
+        let re_0th_line = Regex::new(&format!("EXAMPLES of {}", word)).expect("bug");
+        let re_1th_line = Regex::new(&format!("{}", word)).expect("bug");
+
+        if !re_0th_line.is_match(lines[0]) || !re_1th_line.is_match(lines[1]) {
+            return Err(MafaError::CamdLevelNotRecoginized(2));
+        }
+
+        let re_usage = Regex::new(&format!(r#"{}.*(\.|"|\?|!)$"#, word)).expect("bug");
+        let re_from = Regex::new("^From .*").expect("bug");
+        let mut i = 2;
+        loop {
+            if i + 1 >= lines.len() {
+                break;
+            }
+            if re_usage.is_match(&lines[i].to_ascii_lowercase()) && re_from.is_match(lines[i + 1]) {
+                let mut one_examp = Examp::default();
+                one_examp.usage = lines[i];
+                one_examp.from = lines[i + 1];
+                ret.0.push(one_examp);
+            }
+            i += 2;
+        }
+
+        Ok(LevelExpained::RealExampKind(ret))
     }
 
     fn from_str_internal_default(word: &str, lines: Vec<&'a str>, li_awl: usize) -> Result<Self> {
@@ -129,7 +161,7 @@ impl<'a> LevelExpained<'a> {
                         } else if re_fewer_examples.is_match(lines[j]) {
                             one_expl.usages.push(lines[j]);
                             // we currently blindly include fewer examples
-                            // and all of them will be dropped into last
+                            // and all of them will be thrown into last
                             // elem of usages
                             i += 1;
                         } else {
@@ -210,11 +242,11 @@ mod tst {
         let mut expected_camd_res = CamdResult(vec![]);
 
         // primary one
-        let mut default_expl = DefaultExpl::default();
-        default_expl.is_interme = false;
-        default_expl.is_busi = false;
-        default_expl.pronun = "US  /heˈloʊ/ UK  /heˈləʊ/";
-        default_expl.expls.push(Expl {
+        let mut expl = DefaultExpl::default();
+        expl.is_interme = false;
+        expl.is_busi = false;
+        expl.pronun = "US  /heˈloʊ/ UK  /heˈləʊ/";
+        expl.expls.push(Expl {
             meaning: "used when meeting or greeting someone:",
             usages: vec![
                 "Hello, Paul. I haven't seen you for ages.",
@@ -223,25 +255,25 @@ mod tst {
                 "And a big hello (= welcome) to all the parents who've come to see the show.",
             ],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "something that is said at the beginning of a phone conversation:",
             usages: vec![
                 "\\\"Hello, I'd like some information about flights to the U.S., please.\\\"",
             ],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "something that is said to attract someone's attention:",
             usages: vec![
                 "The front door was open so she walked inside and called out, \\\"Hello! Is there anybody in?\\\"",
             ],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "said to someone who has just said or done something stupid, especially something that shows they are not noticing what is happening:",
             usages: vec![
                 "She asked me if I'd just arrived and I was like \\\"Hello, I've been here for an hour.\\\"",
             ],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "an expression of surprise:",
             usages: vec![
                 "Hello, this is very strange - I know that man.",
@@ -254,16 +286,14 @@ mod tst {
             ],
         });
 
-        expected_camd_res
-            .0
-            .push(LevelExpained::DefaultKind(default_expl));
+        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
 
         // intermediate one
-        let mut default_expl = DefaultExpl::default();
-        default_expl.is_interme = true;
-        default_expl.is_busi = false;
-        default_expl.pronun = "US  /heˈloʊ, hə-/";
-        default_expl.expls.push(Expl {
+        let mut expl = DefaultExpl::default();
+        expl.is_interme = true;
+        expl.is_busi = false;
+        expl.pronun = "US  /heˈloʊ, hə-/";
+        expl.expls.push(Expl {
             meaning: "used when meeting or greeting someone:",
             usages: vec![
                 "\\\"Hello, Paul,\\\" she said, \\\"I haven’t seen you for months.\\\"",
@@ -271,24 +301,71 @@ mod tst {
                 "Come and say hello to my friends (= meet them).",
             ],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "Hello is also said at the beginning of a telephone conversation.",
             usages: vec![],
         });
-        default_expl.expls.push(Expl {
+        expl.expls.push(Expl {
             meaning: "Hello is also used to attract someone’s attention:",
             usages: vec![
                 "She walked into the shop and called out, \\\"Hello! Is anybody here?\\\"",
             ],
         });
 
-        expected_camd_res
-            .0
-            .push(LevelExpained::DefaultKind(default_expl));
+        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
 
-        expected_camd_res
-            .0
-            .push(LevelExpained::DefaultKind(Default::default()));
+        // examples
+        let mut expl = RealExamp::default();
+        expl.0.push(Examp {
+            usage: "She said that the highlight of her day was when she went up to say hello to one of the families.",
+            from: "From Huffington Post",
+        });
+        expl.0.push(Examp {
+            usage: "We learned to hear sorrow in one \\\"hello,\\\" and how to sit with each other without words.",
+            from: "From Huffington Post",
+        });
+        expl.0.push(Examp {
+            usage: "They say they hear him saying words like \\\"hello,\\\" even if others are skeptical, and say he responds to their attention.",
+            from: "From ABC News",
+        });
+        expl.0.push(Examp {
+            usage: "Usually, they get a response, and the second baseman will find his friends and say hello.",
+            from: "From ESPN",
+        });
+        expl.0.push(Examp {
+            usage: "Though he played a criminal on television, they say he was one of the nicest men and always waved hello.",
+            from: "From CNN",
+        });
+        expl.0.push(Examp {
+            usage: "Almost everybody stops by to say hello and chat.",
+            from: "From Chicago Tribune",
+        });
+        expl.0.push(Examp {
+            usage: "Hello, this is your friendly government authority here.",
+            from: "From Gizmodo",
+        });
+        expl.0.push(Examp {
+            usage: "Hello, please allow me to introduce myself, sir.",
+            from: "From CNN",
+        });
+        expl.0.push(Examp {
+            usage: "Walk up to him or her and do three things: smile, say hello, and listen.",
+            from: "From Huffington Post",
+        });
+        expl.0.push(Examp {
+            usage: "What are the characteristics of the way you say, \\\"hello,\\\" (or anything else for that matter) that makes you recognizable over the phone?",
+            from: "From Phys.Org",
+        });
+        expl.0.push(Examp {
+            usage: "Hello didn't become \\\"hi\\\" until the telephone arrived.",
+            from: "From NPR",
+        });
+
+        expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
+
+        // expected_camd_res
+        //     .0
+        //     .push(LevelExpained::DefaultKind(Default::default()));
 
         assert_eq!(camd_res, expected_camd_res);
 
