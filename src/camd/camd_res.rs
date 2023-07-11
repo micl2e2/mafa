@@ -89,15 +89,20 @@ impl DefaultExpl<'_> {
 
         if self.is_interme {
             output += if nocolor { "" } else { "\x1b[31;1m" };
-            output += "--- INTERMEDIATE ---";
+            output += if asciiful { "---" } else { "───" };
+            output += " I N T E R M E D I A T E ";
+            output += if asciiful { "---" } else { "───" };
             output += if nocolor { "" } else { "\x1b[0m" };
+            output += "\n";
         }
         if self.is_busi {
-            output += if nocolor { "" } else { "\x1b[33;1m" };
-            output += "---   BUSINESS   ---";
+            output += if nocolor { "" } else { "\x1b[31;1m" };
+            output += if asciiful { "---" } else { "───" };
+            output += " B U S I N E S S ";
+            output += if asciiful { "---" } else { "───" };
             output += if nocolor { "" } else { "\x1b[0m" };
+            output += "\n";
         }
-        output += "\n";
         output += "\n";
 
         // currently omit pronun
@@ -124,6 +129,14 @@ pub struct RealExamp<'a>(Vec<Examp<'a>>);
 impl RealExamp<'_> {
     fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
         let mut output = String::default();
+
+        output += if nocolor { "" } else { "\x1b[31;1m" };
+        output += if asciiful { "---" } else { "───" };
+        output += " E X A M P L E S ";
+        output += if asciiful { "---" } else { "───" };
+        output += if nocolor { "" } else { "\x1b[0m" };
+        output += "\n";
+        output += "\n";
 
         for ele in &self.0 {
             output += &ele.pretty_print(nocolor, asciiful, wrap_width)?;
@@ -201,9 +214,25 @@ impl Examp<'_> {
     fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
         let mut output = String::default();
 
-        output += self.usage;
-        output += "  -  ";
-        output += self.from;
+        let mut part_a_usage = String::default();
+        part_a_usage += "- ";
+        let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
+        part_a_usage += if nocolor { "" } else { "\x1b[1m" };
+        part_a_usage += self.from;
+        part_a_usage += if nocolor { "" } else { "\x1b[0m" };
+        part_a_usage += ": ";
+        part_a_usage += &comm::make_readable(self.usage);
+
+        let mut wrapper = bwrap::EasyWrapper::new(&part_a_usage, wrap_width - w_leading).unwrap();
+        let txt_leading = comm::replicate(" ", w_leading);
+        let wrapped_part_a_usage = wrapper
+            .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
+                &txt_leading,
+                bwrap::ExistNlPref::KeepTrailSpc,
+            ))
+            .unwrap();
+
+        output += &wrapped_part_a_usage;
 
         Ok(output)
     }
@@ -412,6 +441,9 @@ impl<'a> LevelExpained<'a> {
         Ok(LevelExpained::RealExampKind(ret))
     }
 
+    ///
+    /// Note that all `pretty_print` should not handle their own LF, but leave
+    /// the job to their parents.
     pub fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
         let mut output = String::default();
 
