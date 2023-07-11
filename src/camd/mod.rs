@@ -1092,7 +1092,7 @@ impl CamdClient<'_> {
         let mut upaths_i = 0; // iterate over all upaths
         let upaths_len = self.upaths.len();
 
-        // script/camd-getres.js
+        // script/camd-getres.js, CHECKED
         let jsin_getres = "console.log=function(){};var send_back=arguments[arguments.length-1];var upath=arguments[0];clearInterval(window['camd-res']);window['camd-res']=setInterval(try_send_back,500);function try_send_back(){var e=document.body;for(let n=0;n<upath.length;n++){if(e==undefined){console.log('undef',n,e);return}else{console.log('following...')}e=e.childNodes[upath[n]]}if(e!=undefined){var n=e.childNodes.length;if(n==0){return}for(let d=0;d<n;d++){let n=e.childNodes[d];if(n.innerText!=undefined&&n.innerText.includes(String.fromCharCode(10)+'Add to word list '+String.fromCharCode(10))){e=e.childNodes[d];break}}console.log('upath & interested',upath,e);let d='';for(let t=0;t<n;t++){let n=e.childNodes[t];if(n!=undefined&&n.nodeType==1){d+='______'+n.innerText}}send_back(d);clearInterval(window['camd-res'])}}";
 
         let mut is_url_reached = false;
