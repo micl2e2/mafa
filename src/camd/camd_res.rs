@@ -3,6 +3,76 @@ use regex::Regex;
 use crate::error::Result;
 use crate::MafaError;
 
+const LABELS: [&str; 67] = [
+    "adjective",
+    "[after noun]",
+    "[after verb]",
+    "[before noun]",
+    "comparative",
+    "superlative",
+    "[not gradable]",
+    "noun",
+    "[C]",
+    "[U]",
+    "[S]",
+    "plural",
+    "noun [plural]",
+    "[usually plural]",
+    "[usually singular]",
+    "[+ sing/pl verb]",
+    "verb",
+    "[T]",
+    "[I]",
+    "auxiliary verb",
+    "modal verb",
+    "past simple",
+    "past participle",
+    "present participle",
+    "phrasal verb",
+    "[L]",
+    "[L only + adjective]",
+    "[L only + noun]",
+    "[+ adv/prep]",
+    "[+ that clause]",
+    "[+ question word]",
+    "[+ speech]",
+    "[+ to infinitive]",
+    "[+ infinitive without to]",
+    "[+ -ing] verb",
+    "[+ not or so]",
+    "[+ not or so]",
+    "[+ two objects]",
+    "[+ obj + adjective]",
+    "[+ obj + noun]",
+    "[+ obj + noun or adjective]",
+    "[+ obj + as noun or adjective]",
+    "[+ obj + to be noun or adjective]",
+    "[+ obj + that clause]",
+    "[+ obj + to infinitive]",
+    "[+ obj + infinitive without to]",
+    "[+ obj + past participle]",
+    "[+ obj + ing verb]",
+    "[+ obj + question word]",
+    "[usually passive]",
+    "[not continuous]",
+    "adverb",
+    "conjunction",
+    "determiner",
+    "number",
+    "ordinal number",
+    "preposition",
+    "predeterminer",
+    "pronoun",
+    "prefix",
+    "suffix",
+    "exclamation",
+    "[+ ing verb]",
+    "[+ to infinitive]",
+    "[+ that]",
+    "[+ question word]",
+    "[as form of address]",
+];
+
 #[derive(Debug, Default, PartialEq)]
 pub struct DefaultExpl<'a> {
     is_interme: bool,
@@ -88,7 +158,6 @@ impl<'a> LevelExpained<'a> {
         let re_busi = Regex::new("BUSINESS ENGLISH").expect("bug");
         // pronun
         let mut li_pronu = usize::MAX;
-        // let re_pronu = Regex::new("^U(S|K) */.*/( *U(K|S) */.*/)?$").expect("bug");
         let re_pronu = Regex::new("^US|K */.*/").expect("bug");
         for i in 0..li_awl {
             if re_pronu.is_match(lines[i]) {
@@ -112,13 +181,30 @@ impl<'a> LevelExpained<'a> {
 
         let is_nv_cate = |s| re_nv_cate1.is_match(s) || re_nv_cate2.is_match(s);
         let not_nv_cate = |s| !re_nv_cate1.is_match(s) && !re_nv_cate2.is_match(s);
-
-        // let mut nex_nv_cate: Option<&str> =
-        //     if re_nv_cate1.is_match(lines[li_awl - 1]) || re_nv_cate2.is_match(lines[li_awl - 1]) {
-        //         Some(lines[li_awl - 1])
-        //     } else {
-        //         None
-        //     };
+        let is_label = |s: &str| {
+            if s.contains(word) {
+                let mut ret = false;
+                if s.contains(".")
+                    || s.contains(";")
+                    || s.contains("?")
+                    || s.contains("\"")
+                    || s.contains("'")
+                    || s.contains("!")
+                {
+                    ret = false;
+                } else {
+                    for l in LABELS {
+                        if s.contains(l) {
+                            ret = true;
+                            break;
+                        }
+                    }
+                }
+                ret
+            } else {
+                false
+            }
+        };
 
         // usages
         let mut i = li_awl + 1;
@@ -131,26 +217,36 @@ impl<'a> LevelExpained<'a> {
             let re_meaning_only = Regex::new(r#".*(\.|"|\?|!)$"#).expect("bug");
             let re_usage = Regex::new(&format!(r#"{}.*(\.|"|\?|!)$"#, word)).expect("bug");
             let re_fewer_examples = Regex::new("Fewer examples").expect("bug");
+
             if re_meaning.is_match(line) {
                 // parse expl
                 let mut one_expl = Expl::default();
                 one_expl.meaning = line;
-                one_expl.nv_cate = if i - 2 > 0 && is_nv_cate(lines[i - 2]) {
+                one_expl.nv_cate = if i - 2 > 0 && is_label(lines[i - 2]) {
                     // some are 2L before
                     Some(lines[i - 2])
-                } else if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
+                } else if i - 3 > 0 && is_label(lines[i - 3]) {
                     // some are 3L before
                     Some(lines[i - 3])
                 } else {
                     None
                 };
+                // one_expl.nv_cate = if i - 2 > 0 && is_nv_cate(lines[i - 2]) {
+                //     // some are 2L before
+                //     Some(lines[i - 2])
+                // } else if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
+                //     // some are 3L before
+                //     Some(lines[i - 3])
+                // } else {
+                //     None
+                // };
                 if i + 1 < lines.len() {
                     for j in i + 1..lines.len() {
                         if is_nv_cate(lines[j]) {
                             continue;
                         }
                         let nex_line_s = lines[j].to_ascii_lowercase();
-                        if nex_line_s.contains(word) {
+                        if nex_line_s.contains(word) && !is_label(&nex_line_s) {
                             one_expl.usages.push(lines[j]);
                             i += 1;
                         } else if re_fewer_examples.is_match(lines[j]) {
@@ -159,16 +255,6 @@ impl<'a> LevelExpained<'a> {
                             // and all of them will be thrown into last
                             // elem of usages
                             i += 1;
-                        // }
-                        // if re_usage.is_match(&nex_line_s) {
-                        //     one_expl.usages.push(lines[j]);
-                        //     i += 1;
-                        // } else if re_fewer_examples.is_match(lines[j]) {
-                        //     one_expl.usages.push(lines[j]);
-                        //     // we currently blindly include fewer examples
-                        //     // and all of them will be thrown into last
-                        //     // elem of usages
-                        //     i += 1;
                         } else {
                             dbgg!(lines[j]);
                             break;
@@ -608,14 +694,13 @@ mod tst {
                 "She insisted on telling me every single detail of what they did to her in the hospital.",
                 "We don't know the full/precise details of the story yet.",
                 "She refused to disclose/divulge any details about/of the plan.",
-		"\u{a0}details [ plural ]"
             ],
             nv_cate: Some("detail noun (INFORMATION)"),
         });
         expl.expls.push(Expl {
             meaning: "information about someone or something:",
             usages: vec!["A police officer took down the details of what happened."],
-            nv_cate: None,
+            nv_cate: Some("\u{a0}details [ plural ]"),
         });
         expl.expls.push(Expl {
             meaning: "the small features of something that you only notice when you look carefully:",
