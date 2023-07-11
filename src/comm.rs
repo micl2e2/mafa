@@ -74,3 +74,14 @@ pub(crate) fn percent_encode(orig: &[u8]) -> Vec<u8> {
     }
     after
 }
+
+fn del_redun_escapes(s: &str) -> String {
+    s.replace(r#"\""#, r#"""#)
+}
+
+pub(crate) fn make_readable(s: &str) -> String {
+    let s1 = s.trim();
+    let s2 = s1.replace(r#"\""#, r#"""#);
+
+    s2
+}
