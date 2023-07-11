@@ -214,32 +214,22 @@ impl<'a> LevelExpained<'a> {
             }
             let line = lines[i];
             let re_meaning = Regex::new(".*:$").expect("bug");
-            let re_meaning_only = Regex::new(r#".*(\.|"|\?|!)$"#).expect("bug");
+            // let re_meaning_only = Regex::new(r#".*(\.|"|\?|!)$"#).expect("bug");
             let re_usage = Regex::new(&format!(r#"{}.*(\.|"|\?|!)$"#, word)).expect("bug");
             let re_fewer_examples = Regex::new("Fewer examples").expect("bug");
 
             if re_meaning.is_match(line) {
+                dbgg!(&line);
                 // parse expl
                 let mut one_expl = Expl::default();
                 one_expl.meaning = line;
                 one_expl.nv_cate = if i - 2 > 0 && is_label(lines[i - 2]) {
-                    // some are 2L before
-                    Some(lines[i - 2])
+                    Some(lines[i - 2]) // some are 2L before
                 } else if i - 3 > 0 && is_label(lines[i - 3]) {
-                    // some are 3L before
-                    Some(lines[i - 3])
+                    Some(lines[i - 3]) // some are 3L before
                 } else {
                     None
                 };
-                // one_expl.nv_cate = if i - 2 > 0 && is_nv_cate(lines[i - 2]) {
-                //     // some are 2L before
-                //     Some(lines[i - 2])
-                // } else if i - 3 > 0 && is_nv_cate(lines[i - 3]) {
-                //     // some are 3L before
-                //     Some(lines[i - 3])
-                // } else {
-                //     None
-                // };
                 if i + 1 < lines.len() {
                     for j in i + 1..lines.len() {
                         if is_nv_cate(lines[j]) {
@@ -249,25 +239,27 @@ impl<'a> LevelExpained<'a> {
                         if nex_line_s.contains(word) && !is_label(&nex_line_s) {
                             one_expl.usages.push(lines[j]);
                             i += 1;
-                        } else if re_fewer_examples.is_match(lines[j]) {
-                            one_expl.usages.push(lines[j]);
-                            // we currently blindly include fewer examples
-                            // and all of them will be thrown into last
-                            // elem of usages
-                            i += 1;
+                        // }
+                        // else if re_fewer_examples.is_match(lines[j]) {
+                        // one_expl.usages.push(lines[j]);
+                        // we currently blindly include fewer examples
+                        // and all of them will be thrown into last
+                        // elem of usages
+                        // i += 1;
                         } else {
                             dbgg!(lines[j]);
                             break;
                         }
                     }
-                    dbgg!(&one_expl);
                 }
-                ret.expls.push(one_expl);
-            } else if re_meaning_only.is_match(line) {
-                let mut one_expl = Expl::default();
-                one_expl.meaning = line;
+                dbgg!(&one_expl);
                 ret.expls.push(one_expl);
             }
+            // else if re_meaning_only.is_match(line) {
+            //     let mut one_expl = Expl::default();
+            //     one_expl.meaning = line;
+            //     ret.expls.push(one_expl);
+            // }
             i += 1;
         }
 
@@ -405,12 +397,12 @@ mod tst {
             meaning: "an expression of surprise:",
             usages: vec![
                 "Hello, this is very strange - I know that man.",
-                " Fewer examples",
-                "Cathy poked her head round the door to say hello.",
-                "When he said hello, I felt my face turn bright red.",
-                "Hello - could I speak to Ann, please?",
-                "After we'd said our hellos, it all went quiet and nobody knew what to do.",
-                "Oh, hello - what are you doing in here?",
+                // " Fewer examples",
+                // "Cathy poked her head round the door to say hello.",
+                // "When he said hello, I felt my face turn bright red.",
+                // "Hello - could I speak to Ann, please?",
+                // "After we'd said our hellos, it all went quiet and nobody knew what to do.",
+                // "Oh, hello - what are you doing in here?",
             ],
             nv_cate: None,
         });
@@ -429,13 +421,14 @@ mod tst {
                 "I know her vaguely – we’ve exchanged hellos a few times.",
                 "Come and say hello to my friends (= meet them).",
             ],
-            nv_cate: None,
+            nv_cate: Some("plural hellos"),
         });
-        expl.expls.push(Expl {
-            meaning: "Hello is also said at the beginning of a telephone conversation.",
-            usages: vec![],
-            nv_cate: None,
-        });
+        // parsing meaning-only is not supported currently
+        // expl.expls.push(Expl {
+        //     meaning: "Hello is also said at the beginning of a telephone conversation.",
+        //     usages: vec![],
+        //     nv_cate: None,
+        // });
         expl.expls.push(Expl {
             meaning: "Hello is also used to attract someone’s attention:",
             usages: vec![
@@ -521,13 +514,13 @@ mod tst {
                 "News of the disaster shocked the (whole/entire) world.",
                 "We live in a changing world and people must learn to adapt.",
                 "She's a world authority on fetal development.",
-		"a world record/championship",
-                " Fewer examples",
-                "People from different cultures have different conceptions of the world.",
-		"The richer countries of the world should take concerted action to help the poorer countries.",
-		"I'm flirting with the idea of taking a year off and traveling round the world.",
-		"He's one of the highest-earning professional golfers in the world.",
-		"The museum's collection includes works of art from all around the world.",
+                "a world record/championship",
+                // " Fewer examples",
+                // "People from different cultures have different conceptions of the world.",
+                // "The richer countries of the world should take concerted action to help the poorer countries.",
+                // "I'm flirting with the idea of taking a year off and traveling round the world.",
+                // "He's one of the highest-earning professional golfers in the world.",
+                // "The museum's collection includes works of art from all around the world.",
             ],
             nv_cate: Some("world noun (THE EARTH)"),
         });
@@ -725,10 +718,18 @@ mod tst {
         });
         expl.expls.push(Expl {
             meaning: "a part of something that does not seem important:",
-            usages: vec!["Tony says, he's going to get the car, and finding the money to pay for it is just a minor detail."," Fewer examples","The model of the village is accurate down to the last detail.","He forgot to tell you one important detail - he's married.","It's only a detail, but could you just add the office phone number at the top of the page?","Her paintings are almost photographic in their detail and accuracy.","There is one small detail you've gotten wrong in your report."],
+            usages: vec![
+		"Tony says, he's going to get the car, and finding the money to pay for it is just a minor detail.",
+		// " Fewer examples",
+		// "The model of the village is accurate down to the last detail.",
+		// "He forgot to tell you one important detail - he's married.",
+		// "It's only a detail, but could you just add the office phone number at the top of the page?",
+		// "Her paintings are almost photographic in their detail and accuracy.",
+		// "There is one small detail you've gotten wrong in your report."
+	    ],
             nv_cate: None,
         });
-        // have no trailing punctuation
+        // no trailing punctuation
         // expl.expls.push(Expl {
         //     meaning: "a group of people who have been given a particular task",
         //     usages: vec![],
