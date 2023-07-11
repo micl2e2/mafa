@@ -15,7 +15,7 @@ mod private_macros;
 
 use mafa::mafadata::MafaData;
 
-#[cfg(any(feature = "gtrans", feature = "twtl"))]
+#[cfg(any(feature = "gtrans", feature = "twtl", feature = "camd"))]
 use mafa::{
     error::{MafaError, Result},
     ev_ntf::EurKind,
@@ -31,13 +31,13 @@ use mafa::MafaInput;
 use rustyline::{error::ReadlineError, DefaultEditor};
 
 #[cfg(feature = "gtrans")]
-use mafa::gtrans::GtransClient;
-
-#[cfg(feature = "gtrans")]
-use mafa::gtrans::GtransInput;
+use mafa::gtrans::{GtransClient, GtransInput};
 
 #[cfg(feature = "twtl")]
 use mafa::twtl::{TwtlClient, TwtlInput};
+
+#[cfg(feature = "camd")]
+use mafa::camd::{CamdClient, CamdInput};
 
 fn main() {
     let mut exit_code = 0;
@@ -69,6 +69,12 @@ fn main() {
                     Some(("twtl", sub_m)) => {
                         let twtl_in = TwtlInput::from_ca_matched(sub_m);
                         exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
+                    }
+
+                    #[cfg(feature = "camd")]
+                    Some(("camd", sub_m)) => {
+                        let camd_in = CamdInput::from_ca_matched(sub_m);
+                        exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
                     }
 
                     #[cfg(feature = "imode")]
@@ -752,6 +758,133 @@ fn workflow_twtl(
                     cate: Category::Twtl,
                     err: err_hdl,
                 });
+                return 3;
+            }
+        },
+    }
+
+    // return 0;
+}
+
+#[cfg(feature = "camd")]
+fn workflow_camd(
+    mafad: &MafaData,
+    mafa_in: &MafaInput,
+    camd_in: Result<CamdInput>,
+    ntf: Arc<Mutex<EventNotifier>>,
+) -> u8 {
+    if let Err(err_in) = camd_in {
+        match err_in {
+            MafaError::InvalidTimeoutPageLoad
+            | MafaError::InvalidTimeoutScript
+            | MafaError::InvalidSocks5Proxy
+            | MafaError::InvalidSourceLang
+            | MafaError::InvalidTargetLang => {
+                lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
+                    cate: Category::Camd,
+                    err: err_in,
+                });
+
+                return 1;
+            }
+
+            _ => {
+                lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
+                    cate: Category::Camd,
+                    err: err_in,
+                });
+
+                return 1;
+            }
+        }
+    }
+
+    let camd_in = camd_in.expect("buggy");
+
+    // silent
+    if !mafa_in.silent {
+        if camd_in.is_silent() {
+            lock_or_rtn!(ntf).set_silent();
+        } else {
+            // notifier.set_nsilent();
+        }
+    }
+
+    let mut ag;
+
+    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+        cate: Category::Camd,
+        is_fin: false,
+    });
+    match CamdClient::new(mafad, Arc::clone(&ntf), mafa_in, camd_in) {
+        Ok(ret) => ag = ret,
+        Err(err_new) => match err_new {
+            MafaError::InvalidTimeoutPageLoad
+            | MafaError::InvalidTimeoutScript
+            | MafaError::InvalidSocks5Proxy
+            | MafaError::InvalidSourceLang
+            | MafaError::InvalidTargetLang
+            | MafaError::AllCachesInvalid
+            | MafaError::CacheNotBuildable
+            | MafaError::WebDrvCmdRejected(_, _)
+            | MafaError::UnexpectedWda(_) => {
+                lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
+                    cate: Category::Camd,
+                    err: err_new,
+                });
+
+                return 2;
+            }
+            _ => {
+                lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
+                    cate: Category::Camd,
+                    err: err_new,
+                });
+
+                return 2;
+            }
+        },
+    }
+
+    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+        cate: Category::Camd,
+        is_fin: true,
+    });
+
+    match ag.handle(None) {
+        Ok((eurk, ret)) => {
+            lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
+                cate: Category::Camd,
+                kind: eurk,
+                output: ret,
+            });
+
+            if ag.is_elap_req() {
+                lock_or_rtn!(ntf).elap(Category::Camd);
+            }
+
+            return 0;
+        }
+        Err(err_hdl) => match err_hdl {
+            MafaError::AllCachesInvalid
+            | MafaError::DataFetchedNotReachable
+            | MafaError::WebDrvCmdRejected(_, _)
+            | MafaError::UnexpectedWda(_)
+            | MafaError::CacheRebuildFail(_) => {
+                lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
+                    cate: Category::Camd,
+                    err: err_hdl,
+                });
+
+                return 3;
+            }
+
+            _ => {
+                lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
+                    cate: Category::Camd,
+                    err: err_hdl,
+                });
+
                 return 3;
             }
         },

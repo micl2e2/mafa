@@ -16,17 +16,19 @@ use crate::error::MafaError;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Category {
-    Gtrans,
-    Twtl,
     Mafa,
+    Twtl,
+    Gtrans,
+    Camd,
 }
 
 impl Category {
     fn as_str(&self) -> &'static str {
         match self {
             Category::Mafa => "Mafa",
-            Category::Gtrans => "Google Translate",
             Category::Twtl => "Twitter Timeline",
+            Category::Gtrans => "Google Translate",
+            Category::Camd => "Cambridge Dictionary",
         }
     }
 }
@@ -97,10 +99,11 @@ pub enum MafaEvent {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EurKind {
     ImodeHelper,
-    GtransResult,  /* google translate translation result */
-    GtransAllLang, /* list all supported lang */
     TwtlResult,    /* twitter timeline result */
     TwtlTryLogin,  /* login/logout twitter account */
+    GtransResult,  /* google translate translation result */
+    GtransAllLang, /* list all supported lang */
+    CamdResult,
 }
 
 #[derive(Debug)]
