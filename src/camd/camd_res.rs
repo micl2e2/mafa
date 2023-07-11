@@ -87,23 +87,24 @@ impl DefaultExpl<'_> {
     fn pretty_print(&self, nocolor: bool, asciiful: bool, wrap_width: usize) -> Result<String> {
         let mut output = String::default();
 
+        let mut part_hdl = String::default();
         if self.is_interme {
-            output += if nocolor { "" } else { "\x1b[31;1m" };
-            output += if asciiful { "---" } else { "───" };
-            output += " I N T E R M E D I A T E ";
-            output += if asciiful { "---" } else { "───" };
-            output += if nocolor { "" } else { "\x1b[0m" };
-            output += "\n";
+            part_hdl += if nocolor { "" } else { "\x1b[31;1m" };
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += " I N T E R M E D I A T E ";
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += if nocolor { "" } else { "\x1b[0m" };
+            part_hdl += "\n";
         }
         if self.is_busi {
-            output += if nocolor { "" } else { "\x1b[31;1m" };
-            output += if asciiful { "---" } else { "───" };
-            output += " B U S I N E S S ";
-            output += if asciiful { "---" } else { "───" };
-            output += if nocolor { "" } else { "\x1b[0m" };
-            output += "\n";
+            part_hdl += if nocolor { "" } else { "\x1b[31;1m" };
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += " B U S I N E S S ";
+            part_hdl += if asciiful { "---" } else { "───" };
+            part_hdl += if nocolor { "" } else { "\x1b[0m" };
+            part_hdl += "\n";
         }
-        output += "\n";
+        part_hdl += "\n";
 
         // currently omit pronun
         // output += self.pronun;
@@ -114,7 +115,14 @@ impl DefaultExpl<'_> {
             output += "\n";
         }
 
-        Ok(output)
+        if output.trim().len() == 0 {
+            Ok(String::default())
+        } else {
+            output = part_hdl + &output;
+            Ok(output)
+        }
+
+        // Ok(output)
     }
 }
 
@@ -217,7 +225,9 @@ impl Examp<'_> {
         let mut part_a_usage = String::default();
         part_a_usage += "- ";
         let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
-        part_a_usage += if nocolor { "" } else { "\x1b[1m" };
+        // FIXME: bwrap buggy on case where not `\x1b[29;1m` but `\x1b[1m`,
+        //        sample input is `odds`
+        part_a_usage += if nocolor { "" } else { "\x1b[29;1m" };
         part_a_usage += self.from;
         part_a_usage += if nocolor { "" } else { "\x1b[0m" };
         part_a_usage += ": ";
@@ -240,7 +250,7 @@ impl Examp<'_> {
 
 #[derive(Debug, PartialEq)]
 pub enum LevelExpained<'a> {
-    DefaultKind(DefaultExpl<'a>),
+    DefaultKind(DefaultExpl<'a>, &'a str),
     RealExampKind(RealExamp<'a>),
 }
 
@@ -266,6 +276,14 @@ impl<'a> LevelExpained<'a> {
         }
         dbgg!(&lines);
 
+        if lines.len() < 2 {
+            return Err(MafaError::CamdLevelNotRecoginized(2));
+        }
+        if lines[1].len() == 0 {
+            return Err(MafaError::CamdLevelNotRecoginized(3));
+        }
+        let corrected_word = lines[1]; // e.g. fewer -> few
+
         let mut li_awl = usize::MAX; // Add to word list
         let re_awl = Regex::new("Add to word list ").expect("bug");
 
@@ -278,14 +296,19 @@ impl<'a> LevelExpained<'a> {
 
         if li_awl < usize::MAX {
             // default, intermediate, business
-            Self::from_str_internal_default(word, lines, li_awl)
+            Self::from_str_internal_default(corrected_word, s, lines, li_awl)
         } else {
             // examples
-            Self::from_str_internal_examples(word, lines)
+            Self::from_str_internal_examples(corrected_word, lines)
         }
     }
 
-    fn from_str_internal_default(word: &str, lines: Vec<&'a str>, li_awl: usize) -> Result<Self> {
+    fn from_str_internal_default(
+        word: &str,
+        s: &'a str,
+        lines: Vec<&'a str>,
+        li_awl: usize,
+    ) -> Result<Self> {
         let mut ret = DefaultExpl::default();
 
         // which kind
@@ -405,7 +428,7 @@ impl<'a> LevelExpained<'a> {
 
         dbgg!(&ret);
 
-        Ok(LevelExpained::DefaultKind(ret))
+        Ok(LevelExpained::DefaultKind(ret, s))
     }
 
     fn from_str_internal_examples(word: &str, lines: Vec<&'a str>) -> Result<Self> {
@@ -448,11 +471,26 @@ impl<'a> LevelExpained<'a> {
         let mut output = String::default();
 
         match self {
-            LevelExpained::DefaultKind(expl) => {
-                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+            LevelExpained::DefaultKind(expl, s) => {
+                let pres = expl.pretty_print(nocolor, asciiful, wrap_width)?;
+                if pres.trim().len() == 0 {
+                    output += if nocolor { "" } else { "\x1b[31;1m" };
+                    output += "\n<UNSUPPORTED>\n";
+                    output += if nocolor { "" } else { "\x1b[0m" };
+
+                    output += if nocolor { "" } else { "\x1b[33m" };
+                    output += &comm::make_printable(s);
+                    output += if nocolor { "" } else { "\x1b[0m" };
+
+                    output += if nocolor { "" } else { "\x1b[31;1m" };
+                    output += "\n<UNSUPPORTED>\n";
+                    output += if nocolor { "" } else { "\x1b[0m" };
+                } else {
+                    output += &pres;
+                }
             }
             LevelExpained::RealExampKind(expl) => {
-                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?
+                output += &expl.pretty_print(nocolor, asciiful, wrap_width)?;
             }
         }
 
@@ -461,10 +499,10 @@ impl<'a> LevelExpained<'a> {
 }
 
 #[derive(Debug, Default, PartialEq)]
-pub struct CamdResult<'a>(Vec<LevelExpained<'a>>);
+pub struct CamdResult<'w, 's>(&'w str, Vec<LevelExpained<'s>>);
 
-impl<'a> CamdResult<'a> {
-    pub fn from_str(word: &str, s: &'a str) -> Result<Self> {
+impl<'w, 's> CamdResult<'w, 's> {
+    pub fn from_str(word: &'w str, s: &'s str) -> Result<Self> {
         let bytes = s.as_bytes();
         let mut lv_expl_list = Vec::<&str>::new();
 
@@ -495,9 +533,10 @@ impl<'a> CamdResult<'a> {
         let mut ret = Self::default();
         for lv_expl in lv_expl_list {
             if let Ok(obj) = LevelExpained::from_str(word, lv_expl) {
-                ret.0.push(obj);
+                ret.1.push(obj);
             }
         }
+        ret.0 = word;
 
         Ok(ret)
     }
@@ -510,15 +549,15 @@ impl<'a> CamdResult<'a> {
         };
 
         let header_part = if asciiful {
-            format!(" Result |")
+            format!(" RESULT |")
         } else {
-            format!(" Result │")
+            format!(" RESULT │")
         };
 
         let header_part_colorful = if asciiful {
-            format!(" \x1b[36;1mResult\x1b[0m |")
+            format!(" \x1b[36;1mRESULT\x1b[0m |")
         } else {
-            format!(" \x1b[36;1mResult\x1b[0m │")
+            format!(" \x1b[36;1mRESULT\x1b[0m │")
         };
 
         // dbgg!(&header_part);
@@ -560,8 +599,19 @@ impl<'a> CamdResult<'a> {
         ); // bottom needs extra line_comp to reach 80
         output += "\n";
 
-        for lv_expl in &self.0 {
-            output += &lv_expl.pretty_print(nocolor, asciiful, wrap_width)?;
+        // the word user quest
+        output += "? ";
+        output += self.0;
+        output += " ?";
+        output += "\n";
+
+        for lv_expl in &self.1 {
+            let pres = &lv_expl.pretty_print(nocolor, asciiful, wrap_width)?;
+            if pres.len() == 0 {
+                output += "<UNSUPPORTED>\n";
+            } else {
+                output += pres;
+            }
         }
 
         Ok(output)
@@ -578,7 +628,7 @@ mod tst {
 
         let camd_res = CamdResult::from_str("hello", &explained).expect("bug");
 
-        let mut expected_camd_res = CamdResult(vec![]);
+        let mut expected_camd_res = CamdResult("hello", vec![]);
 
         // primary one
         let mut expl = DefaultExpl::default();
@@ -630,7 +680,9 @@ mod tst {
             nv_cate: None,
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, " \\nhello\\nexclamation, noun\\nUS  /heˈloʊ/ UK  /heˈləʊ/\\n(also mainly UK hallo); (hullo)\\nAdd to word list \\nA1\\nused when meeting or greeting someone:\\nHello, Paul. I haven't seen you for ages.\\nI know her vaguely - we've exchanged hellos a few times.\\nI just thought I'd call by and say hello.\\nAnd a big hello (= welcome) to all the parents who've come to see the show.\\n \\nA1\\nsomething that is said at the beginning of a phone conversation:\\n\\\"Hello, I'd like some information about flights to the U.S., please.\\\"\\n \\nsomething that is said to attract someone's attention:\\nThe front door was open so she walked inside and called out, \\\"Hello! Is there anybody in?\\\"\\n \\ninformal\\nsaid to someone who has just said or done something stupid, especially something that shows they are not noticing what is happening:\\nShe asked me if I'd just arrived and I was like \\\"Hello, I've been here for an hour.\\\"\\n \\nold-fashioned\\nan expression of surprise:\\nHello, this is very strange - I know that man.\\n Fewer examples\\nCathy poked her head round the door to say hello.\\nWhen he said hello, I felt my face turn bright red.\\nHello - could I speak to Ann, please?\\nAfter we'd said our hellos, it all went quiet and nobody knew what to do.\\nOh, hello - what are you doing in here?\\n SMART Vocabulary: related words and phrases\\nGrammar\\nGreetings and farewells: hello, goodbye, Happy New Year\\nWhen we see someone we know, we usually exchange greetings: …\\nSaying hello\\nWhen we see someone we know, we usually exchange greetings: …\\nSaying goodbye\\nWhen we leave people, we usually say something as we leave: …\\n(Definition of hello from the Cambridge Advanced Learner's Dictionary & Thesaurus © Cambridge University Press)"));
 
         // intermediate one
         let mut expl = DefaultExpl::default();
@@ -660,7 +712,9 @@ mod tst {
             nv_cate: None,
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, "hello | INTERMEDIATE ENGLISH\\nhello\\nexclamation, noun [ C ]\\nUS  /heˈloʊ, hə-/\\nplural hellos\\nAdd to word list \\nused when meeting or greeting someone:\\n\\\"Hello, Paul,\\\" she said, \\\"I haven’t seen you for months.\\\"\\nI know her vaguely – we’ve exchanged hellos a few times.\\nCome and say hello to my friends (= meet them).\\n \\nHello is also said at the beginning of a telephone conversation.\\n \\nHello is also used to attract someone’s attention:\\nShe walked into the shop and called out, \\\"Hello! Is anybody here?\\\"\\n(Definition of hello from the Cambridge Academic Content Dictionary © Cambridge University Press)"));
 
         // examples
         let mut expl = RealExamp::default();
@@ -709,7 +763,8 @@ mod tst {
             from: "From NPR",
         });
 
-        expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
+        expected_camd_res.0 = "hello";
+        expected_camd_res.1.push(LevelExpained::RealExampKind(expl));
 
         assert_eq!(camd_res, expected_camd_res);
 
@@ -722,7 +777,7 @@ mod tst {
 
         let camd_res = CamdResult::from_str("world", &explained).expect("bug");
 
-        let mut expected_camd_res = CamdResult(vec![]);
+        let mut expected_camd_res = CamdResult("world", vec![]);
 
         // primary one
         let mut expl = DefaultExpl::default();
@@ -766,7 +821,9 @@ mod tst {
             nv_cate: Some("world noun (PLANET)"),
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, " \\nworld\\nnoun\\nUS  /wɝːld/ UK  /wɜːld/\\nworld noun (THE EARTH)\\nAdd to word list \\nA1 [ S ]\\nthe earth and all the people, places, and things on it:\\nDifferent parts of the world have very different climatic conditions.\\nWhich bridge has the longest span in the world?\\nNews of the disaster shocked the (whole/entire) world.\\nWe live in a changing world and people must learn to adapt.\\nShe's a world authority on fetal development.\\na world record/championship\\n Fewer examples\\nPeople from different cultures have different conceptions of the world.\\nThe richer countries of the world should take concerted action to help the poorer countries.\\nI'm flirting with the idea of taking a year off and traveling round the world.\\nHe's one of the highest-earning professional golfers in the world.\\nThe museum's collection includes works of art from all around the world.\\n SMART Vocabulary: related words and phrases\\nworld noun (GROUP/AREA)\\n \\nB1 [ C usually singular ]\\na group of things such as countries or animals, or an area of human activity or understanding:\\nthe Muslim world\\nthe modern/industrialized world\\nthe animal world\\nstars from the rock music world\\nUnexpected things can happen in the world of subatomic particles.\\n More examples\\n SMART Vocabulary: related words and phrases\\nworld noun (PLANET)\\n \\n[ C ]\\na planet or other part of the universe, especially one where life might or does exist:\\nThere was a man on the news last night who believes we've been visited by beings from other worlds.\\n SMART Vocabulary: related words and phrases\\nIdioms\\nat one with the world\\nbe worlds apart\\ndo someone a world of good\\nfor all the world\\ngo/come down in the world\\ngo/come up in the world\\nhave the world at your feet\\nin a world of your own\\nmake a world of difference\\nmake the world go around/round\\n More idioms\\n(Definition of world from the Cambridge Advanced Learner's Dictionary & Thesaurus © Cambridge University Press)"));
 
         // intermediate one
         let mut expl = DefaultExpl::default();
@@ -802,7 +859,9 @@ mod tst {
             nv_cate: Some("world noun (LARGE DEGREE)"),
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, "world | INTERMEDIATE ENGLISH\\nworld\\nnoun\\nUS  /wɜrld/\\nworld noun (THE EARTH)\\nAdd to word list \\n[ U ]\\nthe planet on which human life has developed, esp. including all people and their ways of life:\\nPeople from all over the world will be attending the conference.\\nThe rapid growth of computers has changed the world.\\n \\n[ U ]\\nThe world can also mean the whole physical universe:\\nThe world contains many solar systems, not just ours.\\nworld noun (WHOLE AREA)\\n \\n[ C ]\\nall of a particular group or type of thing, such as countries or animals, or a whole area of human activity or understanding:\\nthe animal/plant world\\nthe business world\\nthe world of entertainment\\nIn the world of politics, the president’s voice is still the most powerful in the nation.\\nworld noun (LARGE DEGREE)\\n \\n[ U ]\\na large degree; a lot:\\nThere’s a world of difference between the two hotels.\\nIdioms\\nin a world of your own\\nin the world\\nman of the world\\n(Definition of world from the Cambridge Academic Content Dictionary © Cambridge University Press)"));
 
         // business one
         let mut expl = DefaultExpl::default();
@@ -819,7 +878,9 @@ mod tst {
             nv_cate: None,
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, "world | BUSINESS ENGLISH\\nworld\\nnoun [ C, usually singular ]\\nUK  /wɜːld/ US \\nAdd to word list \\na particular area of activity:\\nOur world of work is changing rapidly.\\nthe world of advertising/the internet\\nthe business/corporate world\\n(Definition of world from the Cambridge Business English Dictionary © Cambridge University Press)"));
 
         // examples
         let mut expl = RealExamp::default();
@@ -884,7 +945,8 @@ mod tst {
             from: "From CNBC",
         });
 
-        expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
+        expected_camd_res.0 = "world";
+        expected_camd_res.1.push(LevelExpained::RealExampKind(expl));
 
         assert_eq!(camd_res, expected_camd_res);
 
@@ -897,7 +959,7 @@ mod tst {
 
         let camd_res = CamdResult::from_str("detail", &explained).expect("bug");
 
-        let mut expected_camd_res = CamdResult(vec![]);
+        let mut expected_camd_res = CamdResult("detail", vec![]);
 
         // primary one
         let mut expl = DefaultExpl::default();
@@ -974,7 +1036,9 @@ mod tst {
             nv_cate: Some("detail verb (CLEAN CAR)"),
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, " \\ndetail\\nnoun\\nUS  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\ndetail noun (INFORMATION)\\nAdd to word list \\nB1 [ C ]\\na single piece of information or fact about something:\\nShe insisted on telling me every single detail of what they did to her in the hospital.\\nWe don't know the full/precise details of the story yet.\\nShe refused to disclose/divulge any details about/of the plan.\\n\u{a0}details [ plural ]\\n \\nA2\\ninformation about someone or something:\\nA police officer took down the details of what happened.\\nSee more\\n \\n[ U ]\\nthe small features of something that you only notice when you look carefully:\\nI was just admiring the detail in the dollhouse - even the cans of food have labels on them.\\nIt's his eye for (= ability to notice) detail that distinguishes him as a painter.\\n\u{a0}in detail\\n \\nB1\\nincluding or considering all the information about something or every part of something:\\nWe haven't discussed the matter in detail yet.\\nSee more\\n\u{a0}go into detail\\n \\nB2\\nto tell or include all the facts about something:\\nI won't go into detail over the phone, but I've been having a few health problems recently.\\nSee more\\n \\n[ C ]\\na part of something that does not seem important:\\nTony says, he's going to get the car, and finding the money to pay for it is just a minor detail.\\n Fewer examples\\nThe model of the village is accurate down to the last detail.\\nHe forgot to tell you one important detail - he's married.\\nIt's only a detail, but could you just add the office phone number at the top of the page?\\nHer paintings are almost photographic in their detail and accuracy.\\nThere is one small detail you've gotten wrong in your report.\\n SMART Vocabulary: related words and phrases\\ndetail noun (GROUP)\\n \\n[ C, + sing/pl verb ]\\na group of people who have been given a particular task\\n SMART Vocabulary: related words and phrases\\n \\ndetail\\nverb\\nUS  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\ndetail verb (GIVE INFORMATION)\\n \\n[ T ] US  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto describe something completely, giving all the facts:\\n[ + question word ] Can you produce a report detailing what we've spent on the project so far?\\n SMART Vocabulary: related words and phrases\\ndetail verb (ORDER)\\n \\n[ T + to infinitive, often passive ] US  /dɪˈteɪl/ US  /ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto order someone, often a small group of soldiers or workers, to perform a particular task:\\nFour soldiers were detailed to check the road for troops.\\n SMART Vocabulary: related words and phrases\\ndetail verb (CLEAN CAR)\\n \\n[ T ] US US/ˈdiː.teɪl/ UK  /ˈdiː.teɪl/\\nto clean the inside and outside of a vehicle very carefully:\\nYou can skip the car wash; Rogers has all the equipment to wash and detail your car in your own driveway.\\na car detailing company\\n SMART Vocabulary: related words and phrases\\n(Definition of detail from the Cambridge Advanced Learner's Dictionary & Thesaurus © Cambridge University Press)"));
 
         // intermediate one
         let mut expl = DefaultExpl::default();
@@ -1005,7 +1069,9 @@ mod tst {
             nv_cate: Some("detail verb [T] (GIVE INFORMATION)"),
         });
 
-        expected_camd_res.0.push(LevelExpained::DefaultKind(expl));
+        expected_camd_res
+            .1
+            .push(LevelExpained::DefaultKind(expl, "detail | INTERMEDIATE ENGLISH\\ndetail\\nnoun\\nUS  /dɪˈteɪl, ˈdi·teɪl/\\ndetail noun (INFORMATION)\\nAdd to word list \\n[ C/U ]\\na particular fact or item of information, often noticed only after giving something your close attention, or such facts or items considered as a group:\\n[ C ] We have a report of a serious accident on Route 23, but so far no details.\\n[ U ] She showed a businesslike attention to detail.\\n[ U ] I can’t go into much detail, but I’ve been having some health problems recently.\\nWe know roughly what he wants to do, but we haven’t discussed his plans in detail (= considering all the particular facts).\\ndetail noun (GROUP)\\n \\n[ C ]\\na small group, esp. of soldiers or police, ordered to perform a particular duty:\\nA detail of five police officers accompanied the diplomat to his hotel.\\ndetailed\\nadjective US  /dɪˈteɪld, ˈdi·teɪld/\\na detailed account/description\\n \\ndetail\\nverb [ T ]\\nUS  /dɪˈteɪl, ˈdi·teɪl/\\ndetail verb [T] (GIVE INFORMATION)\\n \\nto give exact and complete information about something:\\nThe committee members issued a brief statement detailing their plans.\\n(Definition of detail from the Cambridge Academic Content Dictionary © Cambridge University Press)"));
 
         // examples
         let mut expl = RealExamp::default();
@@ -1066,7 +1132,8 @@ mod tst {
             from: "From Huffington Post",
         });
 
-        expected_camd_res.0.push(LevelExpained::RealExampKind(expl));
+        expected_camd_res.0 = "detail";
+        expected_camd_res.1.push(LevelExpained::RealExampKind(expl));
 
         assert_eq!(camd_res, expected_camd_res);
 
