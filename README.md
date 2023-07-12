@@ -1,38 +1,39 @@
 
 # Table of Contents
 
--   [A Small Demo](#org61ec11a)
--   [Installation](#org0da5bfd)
-    -   [Prerequisite](#org62b51bf)
-    -   [Option 1: Cargo install (recommended)](#org6b701ca)
-    -   [Option 2: Build from source](#orgc9548d2)
-    -   [Option 3: Prebuilt binaries](#orgd373550)
--   [Mafa is for me?](#org8602937)
--   [What is Mafa](#orgcb553e1)
-    -   [How Mafa works](#org256e25b)
-    -   [Why Mafa](#org65b1f5b)
-    -   [About Mafa](#org80183fa)
--   [Supported modules ](#org51a98ac)
--   [Contributing](#org58deb4d)
--   [License](#org885ce3b)
+-   [A Small Demo](#org35ea5d9)
+-   [Installation](#org8e8828b)
+    -   [Prerequisite](#org3bb85db)
+    -   [Option 1: Cargo install (recommended)](#org5748bf6)
+    -   [Option 2: Build from source](#orgddb2702)
+    -   [Option 3: Prebuilt binaries](#orgc82a299)
+-   [Mafa is for me?](#orgf025c7c)
+-   [What is Mafa](#org06953ca)
+    -   [How Mafa works](#orgf689b1f)
+    -   [Why Mafa](#orgc178c16)
+    -   [About Mafa](#orgd214b20)
+-   [Supported components ](#org2c3e881)
+    -   [What about website "&#x2026;"?](#org17e3f66)
+-   [Contributing](#org6c439f0)
+-   [License](#org814b32e)
 
 
 
-<a id="org61ec11a"></a>
+<a id="org35ea5d9"></a>
 
 # A Small Demo
 
 *(captured by [LICEcap](https://www.cockos.com/licecap/))*
 
-<img src="demo.gif" alt="demo" width="500px"/>
+![img](./demo.gif)
 
 
-<a id="org0da5bfd"></a>
+<a id="org8e8828b"></a>
 
 # Installation
 
 
-<a id="org62b51bf"></a>
+<a id="org3bb85db"></a>
 
 ## Prerequisite
 
@@ -48,7 +49,7 @@ depends on:
 4.  gzip (any version)
 
 
-<a id="org6b701ca"></a>
+<a id="org5748bf6"></a>
 
 ## Option 1: Cargo install (recommended)
 
@@ -63,7 +64,7 @@ If you have Cargo installed, then you can
     mafa --version
 
 
-<a id="orgc9548d2"></a>
+<a id="orgddb2702"></a>
 
 ## Option 2: Build from source
 
@@ -80,45 +81,48 @@ If you have Cargo installed, then you can
     ./target/release/mafa --version
 
 
-<a id="orgd373550"></a>
+<a id="orgc82a299"></a>
 
 ## Option 3: Prebuilt binaries
 
 Check [releases](https://github.com/imichael2e2/mafa/releases).
 
 
-<a id="org8602937"></a>
+<a id="orgf025c7c"></a>
 
 # Mafa is for me?
 
-Mafa is for you if Mafa has whatever you can make use of.
+Mafa is developed for the ones who want to benefit from Web's openness
+as much as possible.
 
 However, Mafa is **NOT** for you if
 
 -   You want to browse websites without a web browser. (Mafa needs
     Firefox)
 
--   You want to see every detail of a website. (Use your favorite web 
-    browser instead)
+-   You want to capture every detail of a website. (Use your favorite
+    web browser directly)
 
 -   You plan to crawl a whole website and extract all its
-    data. (A dedicated web crawler or data scraper does a better job)
+    data. (A dedicated web crawler does a better job)
 
 
-<a id="orgcb553e1"></a>
+<a id="org06953ca"></a>
 
 # What is Mafa
 
 Mafa is a command-line tool that helps people interact with online
 websites in a terminal(tty). It accesses websites through
-*modules*. Modules are child programs that rely on [WebDriver](https://www.w3.org/TR/webdriver) to do
-their job. Each module has a fixed destination website and has a
-specific job for that site. With modules, users can browse websites
-without interacting with web browsers directly. The supported  
-modules are listed [below](#org08877ce).  
+*components*. Components are child programs that rely on [WebDriver](https://www.w3.org/TR/webdriver) to do
+their job. Each module has a fixed, predefined website url and has a 
+specific task for that site. With components, users can browse websites
+without interacting with web browsers directly.
+
+Note that Mafa supports wbsites selectively rather than arbitrarily,
+the selected ones are listed in [below](#orga259726).  
 
 
-<a id="org256e25b"></a>
+<a id="orgf689b1f"></a>
 
 ## How Mafa works
 
@@ -127,7 +131,7 @@ Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With 
 can act like a human, browsing websites naturally for its user. 
 
 
-<a id="org65b1f5b"></a>
+<a id="orgc178c16"></a>
 
 ## Why Mafa
 
@@ -167,14 +171,17 @@ However, Mafa can handle those dynamic and unpredictable
 web pages as effortlessly as the static ones. 
 
 
-<a id="org80183fa"></a>
+<a id="orgd214b20"></a>
 
 ## About Mafa
 
-Mafa is initially developed for (**M**)aking (**A**)PI (**F**)ree
-(**A**)gain. Here "free" is the same word defined in
-[What is Free Software?](https://www.gnu.org/philosophy/free-sw.en.html), i.e., as in "free speech", not as in"free
-beer". Some websites provide their data *publicly* but do not
+Although Mafa is initially developed for (**M**)aking (**A**)PI (**F**)ree
+(**A**)gain, it is not realistic. Instead of freeing APIs, Mafa
+frees the text-form data behind the APIs. Here "free" is the same word
+defined in [What is Free Software?](https://www.gnu.org/philosophy/free-sw.en.html), i.e., as in "free speech", not as
+in "free beer".
+
+Some websites provide their data *publicly* but do not 
 publish corresponding APIs to access it, while others offer their data
 *publicly* in their carefully designed websites and APIs but with even
 more carefully designed pricing. Those websites are blocking users
@@ -182,31 +189,46 @@ from accessing their *public* data by either not providing APIs or
 providing ones with non-trivial barriers, examples of disrespecting
 users' freedom.
 
-Mafa is the one who fights against them and protects web users'
-freedom. Because Mafa believes that as long as the data is publicly
-accessible for all users without discrimination, the APIs to access it
-should be as well. 
+Mafa is the one who commits to protexting web users' freedom. It
+tries its best to achieve the initial goal: as long as the data is
+publicly accessible to all users without discrimination, the APIs to
+access it should be as well. 
 
 
-<a id="org51a98ac"></a>
+<a id="org2c3e881"></a>
 
-# Supported modules <a id="org08877ce"></a>
+# Supported components <a id="orga259726"></a>
+
+-   TWTL: Query Twitter users' timeline.
+
+-   GTRANS: Query translation from Google Translate.
+
+-   CAMD: Query word definition from Cambridge Dictionary.
 
 -   IMODE: Interactive mode.
 
--   TWTL: Twitter users' timeline.
 
--   GTRANS: Google translation service.
+<a id="org17e3f66"></a>
+
+## What about website "&#x2026;"?
+
+Yes! Mafa is open in its heart. If your favorite websites are not
+listed here, you can <span class="underline">submit a feature request</span> or write a Mafa
+component for your favorite website, as long as that site meets the
+following requirements: 
+
+1.  It will not shut down in the foreseeable future.
+2.  The valuable data on it is in text form.
 
 
-<a id="org58deb4d"></a>
+<a id="org6c439f0"></a>
 
 # Contributing
 
 Mafa is still in early development, any contribution is welcomed!
 
 
-<a id="org885ce3b"></a>
+<a id="org814b32e"></a>
 
 # License
 

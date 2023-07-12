@@ -19,7 +19,8 @@ What is Mafa
 .. How Mafa works
 .. Why Mafa
 .. About Mafa
-Supported modules
+Supported components
+.. What about website "…"?
 Contributing
 License
 
@@ -101,18 +102,19 @@ Option 3: Prebuilt binaries
 Mafa is for me?
 ═══════════════
 
-  Mafa is for you if Mafa has whatever you can make use of.
+  Mafa is developed for the ones who want to benefit from Web's openness
+  as much as possible.
 
   However, Mafa is *NOT* for you if
 
   • You want to browse websites without a web browser. (Mafa needs
     Firefox)
 
-  • You want to see every detail of a website. (Use your favorite web
-    browser instead)
+  • You want to capture every detail of a website. (Use your favorite
+    web browser directly)
 
   • You plan to crawl a whole website and extract all its data. (A
-    dedicated web crawler or data scraper does a better job)
+    dedicated web crawler does a better job)
 
 
 What is Mafa
@@ -120,16 +122,18 @@ What is Mafa
 
   Mafa is a command-line tool that helps people interact with online
   websites in a terminal(tty). It accesses websites through
-  /modules/. Modules are child programs that rely on [WebDriver] to do
-  their job. Each module has a fixed destination website and has a
-  specific job for that site. With modules, users can browse websites
-  without interacting with web browsers directly. The supported modules
-  are listed [below].
+  /components/. Components are child programs that rely on [WebDriver]
+  to do their job. Each module has a fixed, predefined website url and
+  has a specific task for that site. With components, users can browse
+  websites without interacting with web browsers directly.
+
+  Note that Mafa supports wbsites selectively rather than arbitrarily,
+  the selected ones are listed in [below].
 
 
 [WebDriver] <https://www.w3.org/TR/webdriver>
 
-[below] See section Supported modules
+[below] See section Supported components
 
 How Mafa works
 ──────────────
@@ -191,10 +195,13 @@ Stable & Long-lasting
 About Mafa
 ──────────
 
-  Mafa is initially developed for (*M*)aking (*A*)PI (*F*)ree
-  (*A*)gain. Here "free" is the same word defined in [What is Free
-  Software?], i.e., as in "free speech", not as in"free beer". Some
-  websites provide their data /publicly/ but do not publish
+  Although Mafa is initially developed for (*M*)aking (*A*)PI (*F*)ree
+  (*A*)gain, it is not realistic. Instead of freeing APIs, Mafa frees
+  the text-form data behind the APIs. Here "free" is the same word
+  defined in [What is Free Software?], i.e., as in "free speech", not as
+  in "free beer".
+
+  Some websites provide their data /publicly/ but do not publish
   corresponding APIs to access it, while others offer their data
   /publicly/ in their carefully designed websites and APIs but with even
   more carefully designed pricing. Those websites are blocking users
@@ -202,9 +209,9 @@ About Mafa
   providing ones with non-trivial barriers, examples of disrespecting
   users' freedom.
 
-  Mafa is the one who fights against them and protects web users'
-  freedom. Because Mafa believes that as long as the data is publicly
-  accessible for all users without discrimination, the APIs to access it
+  Mafa is the one who commits to protexting web users' freedom. It tries
+  its best to achieve the initial goal: as long as the data is publicly
+  accessible to all users without discrimination, the APIs to access it
   should be as well.
 
 
@@ -212,14 +219,28 @@ About Mafa
 <https://www.gnu.org/philosophy/free-sw.en.html>
 
 
-Supported modules
-═════════════════
+Supported components
+════════════════════
+
+  • TWTL: Query Twitter users' timeline.
+
+  • GTRANS: Query translation from Google Translate.
+
+  • CAMD: Query word definition from Cambridge Dictionary.
 
   • IMODE: Interactive mode.
 
-  • TWTL: Twitter users' timeline.
 
-  • GTRANS: Google translation service.
+What about website "…"?
+───────────────────────
+
+  Yes! Mafa is open in its heart. If your favorite websites are not
+  listed here, you can _submit a feature request_ or write a Mafa
+  component for your favorite website, as long as that site meets the
+  following requirements:
+
+  1. It will not shut down in the foreseeable future.
+  2. The valuable data on it is in text form.
 
 
 Contributing
