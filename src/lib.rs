@@ -378,7 +378,7 @@ pub fn get_cmd() -> ClapCommand {
     };
 
     static HELPER_TXT: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(|| {
-        let mut s = format!("{}\nfeatures: ", clap::crate_version!());
+        let mut s = format!("{}\ncomponents: ", clap::crate_version!());
         #[cfg(feature = "imode")]
         {
             s += "IMODE ";
@@ -390,6 +390,10 @@ pub fn get_cmd() -> ClapCommand {
         #[cfg(feature = "twtl")]
         {
             s += "TWTL ";
+        }
+        #[cfg(feature = "camd")]
+        {
+            s += "CAMD ";
         }
 
         s += "\n\n";
@@ -405,10 +409,24 @@ There is NO WARRANTY, to the extent permitted by law.";
     let cmd_mafa = ClapCommand::new("mafa")
         .version(clap::crate_version!())
         .long_version(HELPER_TXT.as_str())
-        .about("Mafa is a convenient tool for fetching web page data.");
+        .about(clap::crate_description!());
 
     #[cfg(feature = "imode")]
-    let cmd_mafa = cmd_mafa.subcommand(ClapCommand::new("i").about("Enter interactive mode"));
+    let cmd_mafa = cmd_mafa.subcommand(
+        ClapCommand::new("i")
+            .about("Enter interactive mode")
+            .long_about(
+                "Enter interactive mode
+
+With interactive mode, Mafa's components interact with websites statefully,
+performing tasks without full initializtion of the underlying WebDriver,
+this usually results in faster performance.
+
+Note that under interactive mode, components' options are identical to
+ones under normal mode, i.e., -h for short help, --help for long help.
+",
+            ),
+    );
 
     #[cfg(feature = "twtl")]
     let cmd_mafa = cmd_mafa.subcommand(twtl::get_cmd());

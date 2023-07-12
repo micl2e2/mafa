@@ -779,7 +779,7 @@ pub fn get_cmd() -> ClapCommand {
     };
 
     let cmd_twtl = ClapCommand::new("twtl")
-        .about("Fetch Twitter timeline")
+        .about("Query Twitter users' timeline")
         .arg(opt_username)
         .arg(opt_ntweets)
         .arg(opt_wrapwidth)

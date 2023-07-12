@@ -709,7 +709,7 @@ pub fn get_cmd() -> ClapCommand {
     };
 
     let cmd_gtrans = ClapCommand::new("gtrans")
-        .about("Fetch Google translation")
+        .about("Query translation from Google Translate")
         .arg(opt_words)
         .arg(opt_list_lang)
         .arg(opt_tl)

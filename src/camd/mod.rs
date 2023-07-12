@@ -555,7 +555,7 @@ pub fn get_cmd() -> ClapCommand {
     };
 
     let cmd_camd = ClapCommand::new("camd")
-        .about("Cambridge Dictionary")
+        .about("Query word definition from Cambridge Dictionary")
         .arg(opt_words)
         .arg(opt_ascii)
         .arg(opt_wrapwidth)
