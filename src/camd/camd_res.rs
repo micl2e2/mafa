@@ -225,9 +225,7 @@ impl Examp<'_> {
         let mut part_a_usage = String::default();
         part_a_usage += "- ";
         let w_leading = UnicodeWidthStr::width(part_a_usage.as_str());
-        // FIXME: bwrap buggy on case where not `\x1b[34m` but `\x1b[34;1m`,
-        //        sample input is `odds`
-        part_a_usage += if nocolor { "" } else { "\x1b[34m" };
+        part_a_usage += if nocolor { "" } else { "\x1b[1m" };
         part_a_usage += self.from;
         part_a_usage += if nocolor { "" } else { "\x1b[0m" };
         part_a_usage += ": ";
