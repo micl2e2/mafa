@@ -25,8 +25,7 @@
 
 *(captured by [LICEcap](https://www.cockos.com/licecap/))*
 
-![img](./demo.gif)
-
+<img src="demo.gif" alt="demo" width="500px"/>
 
 <a id="org8e8828b"></a>
 
