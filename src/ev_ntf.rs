@@ -804,18 +804,19 @@ impl EventNotifier {
 
     // cannot be silent
     pub fn elap(&self, cate: Category) {
-        match cate {
-            Category::Gtrans => {
-                self.elap_gtrans();
-            }
-            Category::Twtl => {
-                self.elap_twtl();
-            }
-            _ => {}
-        }
+        self.elap_cate(cate);
+        // match cate {
+        //     Category::Gtrans => {
+        //         self.elap_gtrans();
+        //     }
+        //     Category::Twtl => {
+        //         self.elap_twtl();
+        //     }
+        //     _ => {}
+        // }
     }
 
-    fn elap_gtrans(&self) {
+    fn elap_cate(&self, what_cate: Category) {
         let mut p_prepare = (Duration::ZERO, Duration::ZERO);
         let mut p_cache = (Duration::ZERO, Duration::ZERO);
         let mut p_fetch = (Duration::ZERO, Duration::ZERO);
@@ -839,11 +840,11 @@ impl EventNotifier {
             match ev.0 {
                 MafaEvent::Initialize { cate, is_fin } => {
                     if is_fin {
-                        if cate == Category::Gtrans && p_prepare.1 == Duration::ZERO {
+                        if cate == what_cate && p_prepare.1 == Duration::ZERO {
                             p_prepare.1 = ev.1;
                         }
                     } else {
-                        if cate == Category::Gtrans && p_prepare.0 == Duration::ZERO {
+                        if cate == what_cate && p_prepare.0 == Duration::ZERO {
                             p_prepare.0 = ev.1;
                             p_whole.0 = ev.1;
                         }
@@ -852,11 +853,11 @@ impl EventNotifier {
 
                 MafaEvent::BuildCache { cate, is_fin } => {
                     if is_fin {
-                        if cate == Category::Gtrans && p_cache.1 == Duration::ZERO {
+                        if cate == what_cate && p_cache.1 == Duration::ZERO {
                             p_cache.1 = ev.1;
                         }
                     } else {
-                        if cate == Category::Gtrans && p_cache.0 == Duration::ZERO {
+                        if cate == what_cate && p_cache.0 == Duration::ZERO {
                             p_cache.0 = ev.1;
                         }
                     }
@@ -864,18 +865,18 @@ impl EventNotifier {
 
                 MafaEvent::FetchResult { cate, is_fin } => {
                     if is_fin {
-                        if cate == Category::Gtrans && p_fetch.1 == Duration::ZERO {
+                        if cate == what_cate && p_fetch.1 == Duration::ZERO {
                             p_fetch.1 = ev.1;
                         }
                     } else {
-                        if cate == Category::Gtrans && p_fetch.0 == Duration::ZERO {
+                        if cate == what_cate && p_fetch.0 == Duration::ZERO {
                             p_fetch.0 = ev.1;
                         }
                     }
                 }
 
                 MafaEvent::ExactWhatRequest { cate, .. } => {
-                    if cate == Category::Gtrans && p_whole.1 == Duration::ZERO {
+                    if cate == what_cate && p_whole.1 == Duration::ZERO {
                         p_whole.1 = ev.1;
                     }
                 }
@@ -898,108 +899,7 @@ impl EventNotifier {
             p_whole.1 = p_whole.0;
         }
 
-        print!("(");
-        print!("Google Translate");
-        print!(" | ");
-        print!("PREPARE:{}ms", (p_prepare.1 - p_prepare.0).as_millis());
-        print!(" | ");
-        print!("CACHE:{}ms", (p_cache.1 - p_cache.0).as_millis());
-        print!(" | ");
-        print!("FETCH:{}ms", (p_fetch.1 - p_fetch.0).as_millis());
-        print!(" | ");
-        print!("ALL:{}ms", (p_whole.1 - p_whole.0).as_millis());
-        print!(")");
-
-        println!();
-        io::stdout().flush().unwrap();
-
-        dbgg!(&self.queue);
-    }
-
-    fn elap_twtl(&self) {
-        let mut p_prepare = (Duration::ZERO, Duration::ZERO);
-        let mut p_cache = (Duration::ZERO, Duration::ZERO);
-        let mut p_fetch = (Duration::ZERO, Duration::ZERO);
-        let mut p_whole = (Duration::ZERO, Duration::ZERO); // should be just sum of above?
-
-        let is_filled = |arg: (Duration, Duration)| -> bool {
-            arg.0 != Duration::ZERO && arg.1 != Duration::ZERO
-        };
-
-        let lasti = self.queue.len() - 1;
-        for _i in 0..self.queue.len() {
-            if is_filled(p_prepare)
-                && is_filled(p_cache)
-                && is_filled(p_fetch)
-                && is_filled(p_whole)
-            {
-                break;
-            }
-            let i = lasti - _i;
-            let ev = &self.queue[i];
-            match ev.0 {
-                MafaEvent::Initialize { cate, is_fin } => {
-                    if is_fin {
-                        if cate == Category::Twtl && p_prepare.1 == Duration::ZERO {
-                            p_prepare.1 = ev.1;
-                        }
-                    } else {
-                        if cate == Category::Twtl && p_prepare.0 == Duration::ZERO {
-                            p_prepare.0 = ev.1;
-                            p_whole.0 = ev.1;
-                        }
-                    }
-                }
-
-                MafaEvent::BuildCache { cate, is_fin } => {
-                    if is_fin {
-                        if cate == Category::Twtl && p_cache.1 == Duration::ZERO {
-                            p_cache.1 = ev.1;
-                        }
-                    } else {
-                        if cate == Category::Twtl && p_cache.0 == Duration::ZERO {
-                            p_cache.0 = ev.1;
-                        }
-                    }
-                }
-
-                MafaEvent::FetchResult { cate, is_fin } => {
-                    if is_fin {
-                        if cate == Category::Twtl && p_fetch.1 == Duration::ZERO {
-                            p_fetch.1 = ev.1;
-                        }
-                    } else {
-                        if cate == Category::Twtl && p_fetch.0 == Duration::ZERO {
-                            p_fetch.0 = ev.1;
-                        }
-                    }
-                }
-
-                MafaEvent::ExactWhatRequest { cate, .. } => {
-                    if cate == Category::Twtl && p_whole.1 == Duration::ZERO {
-                        p_whole.1 = ev.1;
-                    }
-                }
-
-                _ => {}
-            }
-        }
-
-        if p_prepare.1 < p_prepare.0 {
-            p_prepare.1 = p_prepare.0;
-        }
-        if p_cache.1 < p_cache.0 {
-            p_cache.1 = p_cache.0;
-        }
-        if p_fetch.1 < p_fetch.0 {
-            p_fetch.1 = p_fetch.0;
-        }
-        if p_whole.1 < p_whole.0 {
-            p_whole.1 = p_whole.0;
-        }
-
-        print!("(");
-        print!("Twtl");
+        print!("({}", what_cate.as_str());
         print!(" | ");
         print!("PREPARE:{}ms", (p_prepare.1 - p_prepare.0).as_millis());
         print!(" | ");
