@@ -80,9 +80,9 @@ checksum = "630be753d4e58660abd17930c71b647fe46c27ea6b63cc59e1e3851406972e42"
 
 [[package]]
 name = "bwrap"
-version = "0.1.0-beta4"
+version = "0.1.0-beta6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "add4337913c917fdff64b288716b336e8535536871bc3c0043b1c4cf377a8c25"
+checksum = "c51f651b99bb3c35ac9201c0e1a8667422c20f8a901f241e22d5ea4b8ae60819"
 dependencies = [
  "unicode-width",
 ]

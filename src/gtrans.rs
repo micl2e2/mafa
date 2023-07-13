@@ -1615,14 +1615,14 @@ impl<'a, 'b> GtransResult<'a, 'b> {
             bwrap::EasyWrapper::new(&self.orig_words, w_orig_line_words as usize).unwrap();
         let orig_line_words = if is_spc_delim(&self.sl) {
             wrapper
-                .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
-                    wrap_append,
+                .wrap_use_style(bwrap::WrapStyle::NoBrk(
+                    Some(wrap_append),
                     bwrap::ExistNlPref::KeepTrailSpc,
                 ))
                 .unwrap()
         } else {
             wrapper
-                .wrap_use_style(bwrap::WrapStyle::MayBreakAppend(wrap_append))
+                .wrap_use_style(bwrap::WrapStyle::MayBrk(None, Some(wrap_append)))
                 .unwrap()
         };
 
@@ -1641,14 +1641,14 @@ impl<'a, 'b> GtransResult<'a, 'b> {
             bwrap::EasyWrapper::new(&self.trans_words, w_trans_line_words as usize).unwrap();
         let trans_line_words = if is_spc_delim(&self.tl) {
             wrapper
-                .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
-                    wrap_append,
+                .wrap_use_style(bwrap::WrapStyle::NoBrk(
+                    Some(wrap_append),
                     bwrap::ExistNlPref::KeepTrailSpc,
                 ))
                 .unwrap()
         } else {
             wrapper
-                .wrap_use_style(bwrap::WrapStyle::MayBreakAppend(wrap_append))
+                .wrap_use_style(bwrap::WrapStyle::MayBrk(None, Some(wrap_append)))
                 .unwrap()
         };
 
@@ -1668,7 +1668,7 @@ impl<'a, 'b> GtransResult<'a, 'b> {
                 bwrap::EasyWrapper::new(&self.trans_pronun.trim(), w_pron_line_words as usize)
                     .unwrap();
             let pron_line_words = wrapper
-                .wrap_use_style(bwrap::WrapStyle::MayBreakAppend(wrap_append))
+                .wrap_use_style(bwrap::WrapStyle::MayBrk(None, Some(wrap_append)))
                 .unwrap();
 
             output += &format!("\n{}{}\n", pron_line_hdr, pron_line_words);

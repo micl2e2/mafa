@@ -175,8 +175,8 @@ impl Expl<'_> {
         let mut wrapper = bwrap::EasyWrapper::new(&part_meaning, wrap_width - w_leading).unwrap();
         let txt_leading = comm::replicate(" ", w_leading);
         let wrapped_part_meaning = wrapper
-            .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
-                &txt_leading,
+            .wrap_use_style(bwrap::WrapStyle::NoBrk(
+                Some(&txt_leading),
                 bwrap::ExistNlPref::KeepTrailSpc,
             ))
             .unwrap();
@@ -200,8 +200,8 @@ impl Expl<'_> {
                 bwrap::EasyWrapper::new(&part_a_usage, wrap_width - w_leading).unwrap();
             let txt_leading = comm::replicate(" ", w_leading);
             let wrapped_part_a_usage = wrapper
-                .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
-                    &txt_leading,
+                .wrap_use_style(bwrap::WrapStyle::NoBrk(
+                    Some(&txt_leading),
                     bwrap::ExistNlPref::KeepTrailSpc,
                 ))
                 .unwrap();
@@ -234,8 +234,8 @@ impl Examp<'_> {
         let mut wrapper = bwrap::EasyWrapper::new(&part_a_usage, wrap_width - w_leading).unwrap();
         let txt_leading = comm::replicate(" ", w_leading);
         let wrapped_part_a_usage = wrapper
-            .wrap_use_style(bwrap::WrapStyle::NoBreakAppend(
-                &txt_leading,
+            .wrap_use_style(bwrap::WrapStyle::NoBrk(
+                Some(&txt_leading),
                 bwrap::ExistNlPref::KeepTrailSpc,
             ))
             .unwrap();

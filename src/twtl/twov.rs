@@ -477,7 +477,9 @@ impl<'a> TweetOverview<'a> {
         dbgg!(&refined_content);
         let mut wrapper = bwrap::EasyWrapper::new(&refined_content, wrap_width as usize).unwrap();
         let wrapped = if wrap_may_break {
-            wrapper.wrap_use_style(bwrap::WrapStyle::MayBreak).unwrap()
+            wrapper
+                .wrap_use_style(bwrap::WrapStyle::MayBrk(None, None))
+                .unwrap()
         } else {
             wrapper.wrap().unwrap()
         };
@@ -527,7 +529,9 @@ impl<'a> TweetOverview<'a> {
             quote_all += "\n"; // done
             let mut wrapper = bwrap::EasyWrapper::new(&quote_all, wrap_width as usize).unwrap();
             let wrapped = if wrap_may_break {
-                wrapper.wrap_use_style(bwrap::WrapStyle::MayBreak).unwrap()
+                wrapper
+                    .wrap_use_style(bwrap::WrapStyle::MayBrk(None, None))
+                    .unwrap()
             } else {
                 wrapper.wrap().unwrap()
             };

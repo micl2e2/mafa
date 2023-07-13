@@ -28,7 +28,7 @@ tst_twtl_logined = []
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
 wda = { version = "0.1.0-beta8",  features = ["firefox"] }
-bwrap = { version = "0.1.0-beta4", features = ["use_std"] }
+bwrap = { version = "0.1.0-beta6", features = ["use_std"] }
 regex = "1.0.0"
 clap = { version = "4.0.0", features = ["cargo"] }
 unicode-width = "0.1.0"
@@ -36,3 +36,6 @@ libc = "0.2.0"
 once_cell = "1.0.0"
 rustyline = { version = "12.0.0", features = [], optional = true }
 quick-xml = { version = "0.29.0", features = ["serialize"], optional = true }
+
+[profile.release]
+strip = "symbols"
