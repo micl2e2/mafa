@@ -80,9 +80,9 @@ checksum = "630be753d4e58660abd17930c71b647fe46c27ea6b63cc59e1e3851406972e42"
 
 [[package]]
 name = "bwrap"
-version = "0.1.0-beta6"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c51f651b99bb3c35ac9201c0e1a8667422c20f8a901f241e22d5ea4b8ae60819"
+checksum = "8a552ac54fcbecc5eedf95d6008637809dc01f895c090cd36f461dcd673ce44f"
 dependencies = [
  "unicode-width",
 ]
@@ -244,7 +244,7 @@ checksum = "b06a4cde4c0f271a446782e3eff8de789548ce57dbc8eca9292c27f4a42004b4"
 
 [[package]]
 name = "mafa"
-version = "0.1.0-beta3"
+version = "0.1.0"
 dependencies = [
  "bwrap",
  "clap",

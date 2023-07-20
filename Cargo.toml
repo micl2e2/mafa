@@ -1,11 +1,11 @@
 [package]
 name = "mafa"
-version = "0.1.0-beta4"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.66.0"
 authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
-description = """Mafa is a command-line tool that helps people interact with online websites
-in a terminal(tty)."""
+description = """Mafa is a command-line tool that helps people interact with
+online websites in a terminal(tty)."""
 repository = "http://github.com/imichael2e2/mafa"
 documentation = "http://github.com/imichael2e2/mafa"
 homepage = "http://github.com/imichael2e2/mafa"
@@ -28,7 +28,7 @@ tst_twtl_logined = []
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
 wda = { version = "0.1.0-beta8",  features = ["firefox"] }
-bwrap = { version = "0.1.0-beta6", features = ["use_std"] }
+bwrap = { version = "1.0.0", features = ["use_std"] }
 regex = "1.0.0"
 clap = { version = "4.0.0", features = ["cargo"] }
 unicode-width = "0.1.0"
