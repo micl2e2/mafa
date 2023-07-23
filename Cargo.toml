@@ -1,6 +1,6 @@
 [package]
 name = "mafa"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 rust-version = "1.66.0"
 authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
@@ -10,7 +10,7 @@ repository = "http://github.com/imichael2e2/mafa"
 documentation = "http://github.com/imichael2e2/mafa"
 homepage = "http://github.com/imichael2e2/mafa"
 license = "GPL-3.0-or-later"
-keywords = ["webdriver", "twitter", "google-translate", "not-a-crawler"]
+keywords = ["twitter", "google-translate", "cambridge-dictionary"]
 categories = ["command-line-utilities", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
