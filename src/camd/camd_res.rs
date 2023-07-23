@@ -107,8 +107,9 @@ impl DefaultExpl<'_> {
         part_hdl += "\n";
 
         // currently omit pronun
-        // output += self.pronun;
-        // output += "\n";
+        // output += pretty_print(self.pronun);
+        output += (self.pronun);
+        output += "\n";
 
         for expl in &self.expls {
             output += &expl.pretty_print(nocolor, asciiful, wrap_width)?;
@@ -121,8 +122,38 @@ impl DefaultExpl<'_> {
             output = part_hdl + &output;
             Ok(output)
         }
+    }
 
-        // Ok(output)
+    ///
+    /// us,uk,unknown
+    fn pretty_pronun(s: &str) -> (Option<&str>, Option<&str>, Option<&str>) {
+        let us_pronu = Regex::new("US *(/[^A-Z]*/) *$").expect("bug");
+        let us2_pronu = Regex::new("US *(/[^A-Z]*/) *UK$").expect("bug");
+        let uk_pronu = Regex::new("UK *(/[^A-Z]*/) *$").expect("bug");
+        let uk2_pronu = Regex::new("UK *(/[^A-Z]*/) *US$").expect("bug");
+        let us_uk_pronu = Regex::new("US *(/[^A-Z]*/) *UK *(/[^A-Z]*/)").expect("bug");
+
+        let mut us_got: Option<&str> = None;
+        let mut uk_got: Option<&str> = None;
+
+        if let Some(v) = us_uk_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+            uk_got = Some(v.get(2).expect("bug").as_str());
+        } else if let Some(v) = us_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = us2_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = uk_pronu.captures(s) {
+            uk_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = uk2_pronu.captures(s) {
+            uk_got = Some(v.get(1).expect("bug").as_str());
+        }
+
+        if us_got.is_none() && uk_got.is_none() {
+            (None, None, Some(s))
+        } else {
+            (us_got, uk_got, None)
+        }
     }
 }
 
@@ -1136,5 +1167,38 @@ mod tst {
         assert_eq!(camd_res, expected_camd_res);
 
         dbg!(&camd_res, &expected_camd_res);
+    }
+
+    #[test]
+    fn pretty_pronun_1() {
+        let s = "US  /wɝːld/ UK  /wɜːld/";
+        assert_eq!(
+            DefaultExpl::pretty_pronun(s),
+            (Some("/wɝːld/"), Some("/wɜːld/"), None)
+        );
+    }
+
+    #[test]
+    fn pretty_pronun_2() {
+        let s = "US  /wɝːld/";
+        assert_eq!(DefaultExpl::pretty_pronun(s), (Some("/wɝːld/"), None, None));
+    }
+
+    #[test]
+    fn pretty_pronun_3() {
+        let s = "UK  /wɝːld/";
+        assert_eq!(DefaultExpl::pretty_pronun(s), (None, Some("/wɝːld/"), None));
+    }
+
+    #[test]
+    fn pretty_pronun_4() {
+        let s = "US  /wɝːld/ UK";
+        assert_eq!(DefaultExpl::pretty_pronun(s), (Some("/wɝːld/"), None, None));
+    }
+
+    #[test]
+    fn pretty_pronun_5() {
+        let s = "UK  /wɝːld/ US";
+        assert_eq!(DefaultExpl::pretty_pronun(s), (None, Some("/wɝːld/"), None));
     }
 }
