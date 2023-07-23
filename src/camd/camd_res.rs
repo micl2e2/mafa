@@ -107,8 +107,8 @@ impl DefaultExpl<'_> {
         part_hdl += "\n";
 
         // currently omit pronun
-        // output += pretty_print(self.pronun);
-        output += (self.pronun);
+        output += &Self::pretty_pronun(self.pronun, asciiful);
+        // output += (self.pronun);
         output += "\n";
 
         for expl in &self.expls {
@@ -124,9 +124,44 @@ impl DefaultExpl<'_> {
         }
     }
 
+    fn pretty_pronun(s: &str, asciiful: bool) -> String {
+        let extracted = Self::extract_pronun(s);
+        let mut ret = String::default();
+
+        let prefix_us = if asciiful { "/US " } else { "/🇺🇸 " };
+        let prefix_uk = if asciiful { "/UK " } else { "/🇬🇧 " };
+
+        match extracted {
+            (Some(us), Some(uk), None) => {
+                ret += prefix_us;
+                ret += &us[1..];
+                ret += "  ";
+                ret += prefix_uk;
+                ret += &uk[1..];
+            }
+            (Some(us), None, None) => {
+                ret += prefix_us;
+                ret += &us[1..];
+            }
+            (None, Some(uk), None) => {
+                ret += prefix_uk;
+                ret += &uk[1..];
+            }
+            (None, None, Some(unknown)) => {
+                ret += "Unknown Pronun  ";
+                ret += unknown;
+            }
+            _ => ret += "Unsupported Pronun",
+        }
+
+        ret += "\n";
+
+        ret
+    }
+
     ///
     /// us,uk,unknown
-    fn pretty_pronun(s: &str) -> (Option<&str>, Option<&str>, Option<&str>) {
+    fn extract_pronun(s: &str) -> (Option<&str>, Option<&str>, Option<&str>) {
         let us_pronu = Regex::new("US *(/[^A-Z]*/) *$").expect("bug");
         let us2_pronu = Regex::new("US *(/[^A-Z]*/) *UK$").expect("bug");
         let uk_pronu = Regex::new("UK *(/[^A-Z]*/) *$").expect("bug");
@@ -1170,35 +1205,47 @@ mod tst {
     }
 
     #[test]
-    fn pretty_pronun_1() {
+    fn extract_pronun_1() {
         let s = "US  /wɝːld/ UK  /wɜːld/";
         assert_eq!(
-            DefaultExpl::pretty_pronun(s),
+            DefaultExpl::extract_pronun(s),
             (Some("/wɝːld/"), Some("/wɜːld/"), None)
         );
     }
 
     #[test]
-    fn pretty_pronun_2() {
+    fn extract_pronun_2() {
         let s = "US  /wɝːld/";
-        assert_eq!(DefaultExpl::pretty_pronun(s), (Some("/wɝːld/"), None, None));
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (Some("/wɝːld/"), None, None)
+        );
     }
 
     #[test]
-    fn pretty_pronun_3() {
+    fn extract_pronun_3() {
         let s = "UK  /wɝːld/";
-        assert_eq!(DefaultExpl::pretty_pronun(s), (None, Some("/wɝːld/"), None));
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (None, Some("/wɝːld/"), None)
+        );
     }
 
     #[test]
-    fn pretty_pronun_4() {
+    fn extract_pronun_4() {
         let s = "US  /wɝːld/ UK";
-        assert_eq!(DefaultExpl::pretty_pronun(s), (Some("/wɝːld/"), None, None));
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (Some("/wɝːld/"), None, None)
+        );
     }
 
     #[test]
-    fn pretty_pronun_5() {
+    fn extract_pronun_5() {
         let s = "UK  /wɝːld/ US";
-        assert_eq!(DefaultExpl::pretty_pronun(s), (None, Some("/wɝːld/"), None));
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (None, Some("/wɝːld/"), None)
+        );
     }
 }
