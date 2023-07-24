@@ -107,7 +107,7 @@ impl DefaultExpl<'_> {
         part_hdl += "\n";
 
         // currently omit pronun
-        output += &Self::pretty_pronun(self.pronun, asciiful);
+        output += &Self::pretty_pronun(self.pronun, nocolor);
         // output += (self.pronun);
         output += "\n";
 
@@ -124,12 +124,20 @@ impl DefaultExpl<'_> {
         }
     }
 
-    fn pretty_pronun(s: &str, asciiful: bool) -> String {
+    fn pretty_pronun(s: &str, nocolor: bool) -> String {
         let extracted = Self::extract_pronun(s);
         let mut ret = String::default();
 
-        let prefix_us = if asciiful { "/US " } else { "/🇺🇸 " };
-        let prefix_uk = if asciiful { "/UK " } else { "/🇬🇧 " };
+        let prefix_us = if nocolor {
+            "/US "
+        } else {
+            "/\x1b[36;1mUS\x1b[0m "
+        };
+        let prefix_uk = if nocolor {
+            "/UK "
+        } else {
+            "/\x1b[35;1mUK\x1b[0m "
+        };
 
         match extracted {
             (Some(us), Some(uk), None) => {
