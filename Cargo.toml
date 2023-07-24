@@ -1,6 +1,6 @@
 [package]
 name = "mafa"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 rust-version = "1.66.0"
 authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
@@ -16,7 +16,7 @@ categories = ["command-line-utilities", "web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = []
+default = ["imode", "gtrans", "camd", "twtl"]
 imode = ["dep:rustyline"]
 twtl = ["dep:quick-xml"]
 gtrans = []
