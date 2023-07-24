@@ -957,7 +957,7 @@ impl CamdClient<'_> {
         self.mafad
             .cache_append("camd", &comb, &format!("{}-", &comb))?;
 
-        self.upaths.push(Upath(upath1));
+        self.upaths.push(Upath(Vec::from(&upath1[0..matched_len])));
 
         Ok(())
     }
@@ -1012,10 +1012,7 @@ impl CamdClient<'_> {
 
             self.mafad.init_cache("camd", &remote_data)?;
         } else if let CacheMechanism::Local = self.input.cachm {
-            self.mafad.try_init_cache(
-                "camd",
-                "[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n-",
-            )?;
+            self.mafad.try_init_cache("camd", "[11,1,1,3,3]\n-")?;
         } else if let CacheMechanism::No = self.input.cachm {
             is_rebuild = true;
         }
@@ -1063,6 +1060,7 @@ impl CamdClient<'_> {
             is_fin: true,
         })?;
 
+        dbgg!((&self.input.words, &explained));
         let camd_res = CamdResult::from_str(&self.input.words, &explained)?;
         dbgg!(&camd_res);
 

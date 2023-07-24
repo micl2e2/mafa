@@ -578,6 +578,8 @@ impl<'w, 's> CamdResult<'w, 's> {
         let bytes = s.as_bytes();
         let mut lv_expl_list = Vec::<&str>::new();
 
+        dbgg!((word, s));
+
         let mut begi_lv = 0usize;
         let mut endi_lv = 0usize;
         for i in 0..bytes.len() {
