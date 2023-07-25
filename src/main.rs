@@ -51,37 +51,56 @@ fn main() {
     match m {
         Ok(matched) => match MafaInput::from_ca_matched(&matched) {
             Ok(mafa_in) => {
+                let mut ignore_subcmd = false;
+
                 if mafa_in.silent {
                     ntf.lock().expect("buggy").set_silent();
                 }
+
                 if mafa_in.nocolor {
                     ntf.lock().expect("buggy").set_nocolor();
                 }
 
-                match matched.subcommand() {
-                    #[cfg(feature = "gtrans")]
-                    Some(("gtrans", sub_m)) => {
-                        let gtrans_in = GtransInput::from_ca_matched(sub_m);
-                        exit_code = workflow_gtrans(&mafad, &mafa_in, gtrans_in, Arc::clone(&ntf));
-                    }
+                if mafa_in.list_profile {
+                    ignore_subcmd = true;
 
-                    #[cfg(feature = "twtl")]
-                    Some(("twtl", sub_m)) => {
-                        let twtl_in = TwtlInput::from_ca_matched(sub_m);
-                        exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
-                    }
+                    ntf.lock()
+                        .expect("buggy")
+                        .notify(MafaEvent::ExactUserRequest {
+                            cate: Category::Mafa,
+                            kind: EurKind::ListProfile,
+                            output: "listing...".into(),
+                        });
+                }
 
-                    #[cfg(feature = "camd")]
-                    Some(("camd", sub_m)) => {
-                        let camd_in = CamdInput::from_ca_matched(sub_m);
-                        exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
-                    }
+                // subcommand
+                if !ignore_subcmd {
+                    match matched.subcommand() {
+                        #[cfg(feature = "gtrans")]
+                        Some(("gtrans", sub_m)) => {
+                            let gtrans_in = GtransInput::from_ca_matched(sub_m);
+                            exit_code =
+                                workflow_gtrans(&mafad, &mafa_in, gtrans_in, Arc::clone(&ntf));
+                        }
 
-                    #[cfg(feature = "imode")]
-                    Some(("i", _)) => {
-                        exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
+                        #[cfg(feature = "twtl")]
+                        Some(("twtl", sub_m)) => {
+                            let twtl_in = TwtlInput::from_ca_matched(sub_m);
+                            exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
+                        }
+
+                        #[cfg(feature = "camd")]
+                        Some(("camd", sub_m)) => {
+                            let camd_in = CamdInput::from_ca_matched(sub_m);
+                            exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
+                        }
+
+                        #[cfg(feature = "imode")]
+                        Some(("i", _)) => {
+                            exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
             Err(err_in) => {

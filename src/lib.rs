@@ -44,6 +44,7 @@ pub struct MafaInput {
     pub tout_script: u32,
     pub socks5: String,
     pub gui: bool,
+    pub list_profile: bool,
 }
 
 impl MafaInput {
@@ -86,6 +87,11 @@ impl MafaInput {
         // gui
         if ca_matched.get_flag(opts::GuiMode::id()) {
             mafa_in.gui = true;
+        }
+
+        // list profile
+        if ca_matched.get_flag(opts::ListProfile::id()) {
+            mafa_in.list_profile = true;
         }
 
         dbgg!(&mafa_in);
@@ -190,6 +196,37 @@ Run the underlying web browser in GUI mode.
 USED WITH CAUTION: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness.
 
 NOTE: subcommands can override this option.";
+
+            let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct ListProfile;
+    impl ListProfile {
+        #[inline]
+        pub fn id() -> &'static str {
+            "LIST_PROFILE"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "list-p"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "List all existing browser profiles"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = "List all existing browser profiles
+
+Note that....";
 
             let mut af_buf = [0u8; 256];
 
@@ -377,6 +414,15 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
+    let opt_list_profile = {
+        type O = opts::ListProfile;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
     static HELPER_TXT: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(|| {
         let mut s = format!("{}\ncomponents: ", clap::crate_version!());
         #[cfg(feature = "imode")]
@@ -443,7 +489,8 @@ ones under normal mode, i.e., -h for short help, --help for long help.
         .arg(opt_gui)
         .arg(opt_socks5)
         .arg(opt_tout_pageload)
-        .arg(opt_tout_script);
+        .arg(opt_tout_script)
+        .arg(opt_list_profile);
 
     cmd_mafa
 }

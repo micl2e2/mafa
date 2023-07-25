@@ -3,12 +3,12 @@ name = "mafa"
 version = "0.2.3"
 edition = "2021"
 rust-version = "1.66.0"
-authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
+authors = ["Michael Lee <micl2e2@proton.me>"]
 description = """Mafa is a command-line tool that helps people interact with
 online websites in a terminal(tty)."""
-repository = "http://github.com/imichael2e2/mafa"
-documentation = "http://github.com/imichael2e2/mafa"
-homepage = "http://github.com/imichael2e2/mafa"
+repository = "http://github.com/micl2e2/mafa"
+documentation = "http://github.com/micl2e2/mafa"
+homepage = "http://github.com/micl2e2/mafa"
 license = "GPL-3.0-or-later"
 keywords = ["twitter", "google-translate", "cambridge-dictionary"]
 categories = ["command-line-utilities", "web-programming"]

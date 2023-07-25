@@ -98,6 +98,7 @@ pub enum MafaEvent {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EurKind {
+    ListProfile,
     ImodeHelper,
     TwtlResult,    /* twitter timeline result */
     TwtlTryLogin,  /* login/logout twitter account */
