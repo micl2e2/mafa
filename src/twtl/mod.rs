@@ -213,6 +213,24 @@ impl TwtlInput {
         }
     }
 
+    pub fn from_i_mode2(args: Vec<&str>) -> Result<TwtlInput> {
+        let cmd_twtl = get_cmd();
+
+        let m = cmd_twtl.try_get_matches_from(args);
+
+        match m {
+            Ok(ca_matched) => {
+                let mut twtl_in = TwtlInput::from_ca_matched(&ca_matched)?;
+
+                twtl_in.imode = true;
+
+                Ok(twtl_in)
+            }
+            // this will print helper
+            Err(err_match) => Err(MafaError::ClapMatchError(err_match.render())),
+        }
+    }
+
     pub fn merge(mut twtl_in: TwtlInput, mafa_in: &MafaInput) -> Result<Self> {
         // mafa wins
         if mafa_in.silent {

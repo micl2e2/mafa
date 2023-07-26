@@ -187,7 +187,9 @@ fn enter_i_mode(
 
                     #[cfg(feature = "twtl")]
                     "twtl" => {
-                        if let Err(_err_imode) = twtl_i_mode(mafad, mafa_in, Arc::clone(&ntf)) {
+                        if let Err(_err_imode) =
+                            twtl_i_mode(mafad, mafa_in, wda_inst, Arc::clone(&ntf))
+                        {
                             return 4;
                         } else {
                             continue;
@@ -429,10 +431,11 @@ fn gtrans_i_mode(
 fn twtl_i_mode(
     mafad: &MafaData,
     mafa_in: &MafaInput,
+    wda_inst: &WebDrvAstn<GeckoDriver>,
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
-    let mut ag: Option<TwtlClient> = None;
+    // let mut ag: Option<TwtlClient> = None;
     loop {
         let readline = rl.readline("[mafa/twtl]>> ");
         match readline {
@@ -451,7 +454,7 @@ fn twtl_i_mode(
                     args.push(split);
                 }
 
-                let twtl_in = TwtlInput::from_i_mode(&mafa_in, args);
+                let twtl_in = TwtlInput::from_i_mode2(args);
 
                 match twtl_in {
                     Ok(_) => {}
@@ -480,63 +483,67 @@ fn twtl_i_mode(
 
                 let twtl_in = twtl_in.expect("buggy");
 
-                if !mafa_in.silent {
-                    if twtl_in.is_silent() {
-                        lock_or_err!(ntf).set_silent();
-                    } else {
-                        lock_or_err!(ntf).set_nsilent();
-                    }
-                }
+                // if !mafa_in.silent {
+                //     if twtl_in.is_silent() {
+                //         lock_or_err!(ntf).set_silent();
+                //     } else {
+                //         lock_or_err!(ntf).set_nsilent();
+                //     }
+                // }
 
                 // not bound by mafa_in
-                if twtl_in.is_nocolor() {
-                    lock_or_err!(ntf).set_nocolor();
-                } else {
-                    lock_or_err!(ntf).set_color();
-                }
+                // if twtl_in.is_nocolor() {
+                //     lock_or_err!(ntf).set_nocolor();
+                // } else {
+                //     lock_or_err!(ntf).set_color();
+                // }
 
-                if ag.is_none() || ag.as_ref().unwrap().need_reprepare(&twtl_in) {
-                    if ag.is_some() {
-                        dbgmsg!("reprepare ag");
-                        let _old_ag = ag.take(); // release wda locks
-                        dbgg!(_old_ag);
-                    }
+                // if ag.is_none() || ag.as_ref().unwrap().need_reprepare(&twtl_in) {
+                //     if ag.is_some() {
+                //         dbgmsg!("reprepare ag");
+                //         let _old_ag = ag.take(); // release wda locks
+                //         dbgg!(_old_ag);
+                //     }
 
-                    lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                        cate: Category::Twtl,
-                        is_fin: false,
-                    });
-                    ag = Some(TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in).unwrap());
-                    lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                        cate: Category::Twtl,
-                        is_fin: true,
-                    });
-                } else {
-                    dbgmsg!("skip prepare ag!");
-                    lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                        cate: Category::Twtl,
-                        is_fin: false,
-                    });
-                    // do nothing
-                    ag.as_mut().unwrap().absorb_minimal(&twtl_in);
-                    lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                        cate: Category::Twtl,
-                        is_fin: true,
-                    });
-                }
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Twtl,
+                //         is_fin: false,
+                //     });
+                //     ag = Some(TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in).unwrap());
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Twtl,
+                //         is_fin: true,
+                //     });
+                // } else {
+                //     dbgmsg!("skip prepare ag!");
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Twtl,
+                //         is_fin: false,
+                //     });
+                //     // do nothing
+                //     ag.as_mut().unwrap().absorb_minimal(&twtl_in);
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Twtl,
+                //         is_fin: true,
+                //     });
+                // }
 
-                let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
+                // let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
 
-                match ag.handle(None) {
+                // FIXME: should be outside the loop
+                let mut client =
+                    MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in, wda_inst);
+
+                match client.handle(None) {
                     Ok((ewrk, ret)) => {
                         lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
                             cate: Category::Twtl,
                             kind: ewrk,
                             output: ret,
                         });
-                        if ag.is_elap_req() {
-                            lock_or_err!(ntf).elap(Category::Twtl);
-                        }
+                        // if ag.is_elap_req() {
+                        //     lock_or_err!(ntf).elap(Category::Twtl);
+                        // }
 
                         // return Ok(());
                         continue;
