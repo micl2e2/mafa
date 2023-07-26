@@ -110,7 +110,13 @@ fn main() {
                         #[cfg(feature = "twtl")]
                         Some(("twtl", sub_m)) => {
                             let twtl_in = TwtlInput::from_ca_matched(sub_m);
-                            exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
+                            exit_code = workflow_twtl(
+                                &mafad,
+                                &mafa_in,
+                                twtl_in,
+                                wda_inst,
+                                Arc::clone(&ntf),
+                            );
                         }
 
                         #[cfg(feature = "camd")]
@@ -862,6 +868,7 @@ fn workflow_twtl(
     mafad: &MafaData,
     mafa_in: &MafaInput,
     twtl_in: Result<TwtlInput>,
+    wda_inst: WebDrvAstn<GeckoDriver>,
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> u8 {
     if let Err(err_in) = twtl_in {
@@ -889,62 +896,65 @@ fn workflow_twtl(
 
     let twtl_in = twtl_in.expect("buggy");
 
+    let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in, wda_inst);
+
     // silent
-    if !mafa_in.silent {
-        if twtl_in.is_silent() {
-            lock_or_rtn!(ntf).set_silent();
-        } else {
-            // notifier.set_nsilent();
-        }
-    }
+    // if !mafa_in.silent {
+    //     if twtl_in.is_silent() {
+    //         lock_or_rtn!(ntf).set_silent();
+    //     } else {
+    //         // notifier.set_nsilent();
+    //     }
+    // }
 
-    let mut ag;
-    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-        cate: Category::Twtl,
-        is_fin: false,
-    });
-    match TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in) {
-        Ok(ret) => ag = ret,
-        Err(err_new) => match err_new {
-            MafaError::InvalidTimeoutPageLoad
-            | MafaError::InvalidTimeoutScript
-            | MafaError::InvalidSocks5Proxy
-            | MafaError::InvalidNumTweets
-            | MafaError::InvalidWrapWidth
-            | MafaError::AllCachesInvalid
-            | MafaError::CacheNotBuildable
-            | MafaError::WebDrvCmdRejected(_, _)
-            | MafaError::UnexpectedWda(_) => {
-                lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
-                    cate: Category::Twtl,
-                    err: err_new,
-                });
-                return 2;
-            }
-            _ => {
-                lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
-                    cate: Category::Twtl,
-                    err: err_new,
-                });
-                return 2;
-            }
-        },
-    }
-    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-        cate: Category::Twtl,
-        is_fin: true,
-    });
+    // let mut ag;
+    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+    //     cate: Category::Twtl,
+    //     is_fin: false,
+    // });
+    // match TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in) {
+    //     Ok(ret) => ag = ret,
+    //     Err(err_new) => match err_new {
+    //         MafaError::InvalidTimeoutPageLoad
+    //         | MafaError::InvalidTimeoutScript
+    //         | MafaError::InvalidSocks5Proxy
+    //         | MafaError::InvalidNumTweets
+    //         | MafaError::InvalidWrapWidth
+    //         | MafaError::AllCachesInvalid
+    //         | MafaError::CacheNotBuildable
+    //         | MafaError::WebDrvCmdRejected(_, _)
+    //         | MafaError::UnexpectedWda(_) => {
+    //             lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
+    //                 cate: Category::Twtl,
+    //                 err: err_new,
+    //             });
+    //             return 2;
+    //         }
+    //         _ => {
+    //             lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
+    //                 cate: Category::Twtl,
+    //                 err: err_new,
+    //             });
+    //             return 2;
+    //         }
+    //     },
+    // }
+    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+    //     cate: Category::Twtl,
+    //     is_fin: true,
+    // });
 
-    match ag.handle(None) {
+    match client.handle(None) {
         Ok((ewrk, ret)) => {
             lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
                 cate: Category::Twtl,
                 kind: ewrk,
                 output: ret,
             });
-            if ag.is_elap_req() {
-                lock_or_rtn!(ntf).elap(Category::Twtl);
-            }
+
+            // if ag.is_elap_req() {
+            //     lock_or_rtn!(ntf).elap(Category::Twtl);
+            // }
 
             return 0;
         }
