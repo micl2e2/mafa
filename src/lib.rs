@@ -40,8 +40,6 @@ pub mod twtl;
 
 #[cfg(feature = "gtrans")]
 pub mod gtrans;
-use gtrans::GtransInput;
-use gtrans::Upath;
 
 #[cfg(feature = "camd")]
 pub mod camd;
@@ -55,6 +53,7 @@ pub struct MafaInput {
     pub socks5: String,
     pub gui: bool,
     pub list_profile: bool,
+    //TODO20230727: add ascii,elapsed,cachm
 }
 
 impl MafaInput {

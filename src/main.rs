@@ -36,13 +36,13 @@ use mafa::MafaInput;
 use rustyline::{error::ReadlineError, DefaultEditor};
 
 #[cfg(feature = "gtrans")]
-use mafa::gtrans::{GtransClient, GtransInput};
+use mafa::gtrans::GtransInput;
 
 #[cfg(feature = "twtl")]
-use mafa::twtl::{TwtlClient, TwtlInput};
+use mafa::twtl::TwtlInput;
 
 #[cfg(feature = "camd")]
-use mafa::camd::{CamdClient, CamdInput};
+use mafa::camd::CamdInput;
 
 fn main() {
     let mut exit_code = 0;
@@ -264,9 +264,7 @@ fn gtrans_i_mode(
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
-    // let mut ag: Option<MafaClient<GtransInput, mafa::gtrans::Upath>> = None;
-    // let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
-
+    let mut client: Option<MafaClient<GtransInput, mafa::gtrans::Upath>> = None;
     loop {
         let readline = rl.readline("[mafa/gtrans]>> ");
         match readline {
@@ -317,64 +315,17 @@ fn gtrans_i_mode(
 
                 let gtrans_in = gtrans_in.expect("buggy");
 
-                // if !mafa_in.silent {
-                //     if gtrans_in.is_silent() {
-                //         lock_or_err!(ntf).set_silent();
-                //     } else {
-                //         lock_or_err!(ntf).set_nsilent();
-                //     }
-                // }
+                if client.is_none() {
+                    client = Some(MafaClient::new(
+                        mafad,
+                        Arc::clone(&ntf),
+                        mafa_in,
+                        gtrans_in,
+                        wda_inst,
+                    ));
+                }
 
-                // not bound by mafa_in
-                // if gtrans_in.is_nocolor() {
-                //     lock_or_err!(ntf).set_nocolor();
-                // } else {
-                //     lock_or_err!(ntf).set_color();
-                // }
-
-                // list lang
-                // if gtrans_in.is_list_lang() {
-                //     lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
-                //         cate: Category::Gtrans,
-                //         kind: EurKind::GtransAllLang,
-                //         output: GtransClient::list_all_lang().into(),
-                //     });
-                //     continue;
-                // }
-
-                // if ag.is_none()
-                // // || ag.as_ref().unwrap().need_reprepare(&gtrans_in)
-                // {
-                //     // if ag.is_some() {
-                //     //     dbgmsg!("reprepare ag");
-                //     //     let _old_ag = ag.take(); // release wda locks
-                //     //     dbgg!(_old_ag);
-                //     // }
-
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Gtrans,
-                //         is_fin: false,
-                //     });
-                //     ag = Some(MafaClient::new(
-                //         mafad,
-                //         Arc::clone(&ntf),
-                //         mafa_in,
-                //         gtrans_in,
-                //         wda_inst,
-                //     ));
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Gtrans,
-                //         is_fin: true,
-                //     });
-                // }
-
-                // let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
-
-                // FIXME: better outside the loop
-                let mut client =
-                    MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
-
-                match client.handle(None) {
+                match client.as_mut().expect("bug").handle(None) {
                     Ok((eurk, ret)) => {
                         lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
                             cate: Category::Gtrans,
@@ -437,7 +388,8 @@ fn twtl_i_mode(
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
-    // let mut ag: Option<TwtlClient> = None;
+    let mut client: Option<MafaClient<TwtlInput, mafa::twtl::UlPath>> = None;
+
     loop {
         let readline = rl.readline("[mafa/twtl]>> ");
         match readline {
@@ -485,58 +437,17 @@ fn twtl_i_mode(
 
                 let twtl_in = twtl_in.expect("buggy");
 
-                // if !mafa_in.silent {
-                //     if twtl_in.is_silent() {
-                //         lock_or_err!(ntf).set_silent();
-                //     } else {
-                //         lock_or_err!(ntf).set_nsilent();
-                //     }
-                // }
+                if client.is_none() {
+                    client = Some(MafaClient::new(
+                        mafad,
+                        Arc::clone(&ntf),
+                        mafa_in,
+                        twtl_in,
+                        wda_inst,
+                    ));
+                }
 
-                // not bound by mafa_in
-                // if twtl_in.is_nocolor() {
-                //     lock_or_err!(ntf).set_nocolor();
-                // } else {
-                //     lock_or_err!(ntf).set_color();
-                // }
-
-                // if ag.is_none() || ag.as_ref().unwrap().need_reprepare(&twtl_in) {
-                //     if ag.is_some() {
-                //         dbgmsg!("reprepare ag");
-                //         let _old_ag = ag.take(); // release wda locks
-                //         dbgg!(_old_ag);
-                //     }
-
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Twtl,
-                //         is_fin: false,
-                //     });
-                //     ag = Some(TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in).unwrap());
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Twtl,
-                //         is_fin: true,
-                //     });
-                // } else {
-                //     dbgmsg!("skip prepare ag!");
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Twtl,
-                //         is_fin: false,
-                //     });
-                //     // do nothing
-                //     ag.as_mut().unwrap().absorb_minimal(&twtl_in);
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Twtl,
-                //         is_fin: true,
-                //     });
-                // }
-
-                // let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
-
-                // FIXME: should be outside the loop
-                let mut client =
-                    MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in, wda_inst);
-
-                match client.handle(None) {
+                match client.as_mut().expect("bug").handle(None) {
                     Ok((ewrk, ret)) => {
                         lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
                             cate: Category::Twtl,
@@ -601,7 +512,7 @@ fn camd_i_mode(
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
-    // let mut ag: Option<CamdClient> = None;
+    let mut client: Option<MafaClient<CamdInput, mafa::camd::Upath>> = None;
 
     loop {
         let readline = rl.readline("[mafa/camd]>> ");
@@ -651,58 +562,17 @@ fn camd_i_mode(
 
                 let camd_in = camd_in.expect("buggy");
 
-                // if !mafa_in.silent {
-                //     if camd_in.is_silent() {
-                //         lock_or_err!(ntf).set_silent();
-                //     } else {
-                //         lock_or_err!(ntf).set_nsilent();
-                //     }
-                // }
+                if client.is_none() {
+                    client = Some(MafaClient::new(
+                        mafad,
+                        Arc::clone(&ntf),
+                        mafa_in,
+                        camd_in,
+                        wda_inst,
+                    ));
+                }
 
-                // not bound by mafa_in
-                // if camd_in.is_nocolor() {
-                //     lock_or_err!(ntf).set_nocolor();
-                // } else {
-                //     lock_or_err!(ntf).set_color();
-                // }
-
-                // if ag.is_none() || ag.as_ref().unwrap().need_reprepare(&camd_in) {
-                //     if ag.is_some() {
-                //         dbgmsg!("reprepare ag");
-                //         let _old_ag = ag.take(); // release wda locks
-                //         dbgg!(_old_ag);
-                //     }
-
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Camd,
-                //         is_fin: false,
-                //     });
-                //     ag = Some(CamdClient::new(mafad, Arc::clone(&ntf), mafa_in, camd_in).unwrap());
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Camd,
-                //         is_fin: true,
-                //     });
-                // } else {
-                //     dbgmsg!("skip prepare ag!");
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Camd,
-                //         is_fin: false,
-                //     });
-                //     // do nothing
-                //     ag.as_mut().unwrap().absorb_minimal(&camd_in);
-                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
-                //         cate: Category::Camd,
-                //         is_fin: true,
-                //     });
-                // }
-
-                // let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
-
-                // FIXME: should be outside the loop
-                let mut client =
-                    MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, camd_in, wda_inst);
-
-                match client.handle(None) {
+                match client.as_mut().expect("bug").handle(None) {
                     Ok((eurk, ret)) => {
                         lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
                             cate: Category::Camd,
@@ -794,61 +664,7 @@ fn workflow_gtrans(
 
     let gtrans_in = gtrans_in.expect("buggy");
 
-    // list lang
-    // if gtrans_in.is_list_lang() {
-    //     lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
-    //         cate: Category::Gtrans,
-    //         kind: EurKind::GtransAllLang,
-    //         output: GtransClient::list_all_lang().into(),
-    //     });
-
-    //     return 0;
-    // }
-
     let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
-
-    // client.handle();
-
-    // let mut ag;
-
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Gtrans,
-    //     is_fin: false,
-    // });
-    // match GtransClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in) {
-    //     Ok(ret) => ag = ret,
-    //     Err(err_new) => match err_new {
-    //         MafaError::InvalidTimeoutPageLoad
-    //         | MafaError::InvalidTimeoutScript
-    //         | MafaError::InvalidSocks5Proxy
-    //         | MafaError::InvalidSourceLang
-    //         | MafaError::InvalidTargetLang
-    //         | MafaError::AllCachesInvalid
-    //         | MafaError::CacheNotBuildable
-    //         | MafaError::WebDrvCmdRejected(_, _)
-    //         | MafaError::UnexpectedWda(_) => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
-    //                 cate: Category::Gtrans,
-    //                 err: err_new,
-    //             });
-
-    //             return 2;
-    //         }
-    //         _ => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
-    //                 cate: Category::Gtrans,
-    //                 err: err_new,
-    //             });
-
-    //             return 2;
-    //         }
-    //     },
-    // }
-
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Gtrans,
-    //     is_fin: true,
-    // });
 
     match client.handle(None) {
         Ok((eurk, ret)) => {
@@ -927,52 +743,6 @@ fn workflow_twtl(
     let twtl_in = twtl_in.expect("buggy");
 
     let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in, wda_inst);
-
-    // silent
-    // if !mafa_in.silent {
-    //     if twtl_in.is_silent() {
-    //         lock_or_rtn!(ntf).set_silent();
-    //     } else {
-    //         // notifier.set_nsilent();
-    //     }
-    // }
-
-    // let mut ag;
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Twtl,
-    //     is_fin: false,
-    // });
-    // match TwtlClient::new(mafad, Arc::clone(&ntf), mafa_in, twtl_in) {
-    //     Ok(ret) => ag = ret,
-    //     Err(err_new) => match err_new {
-    //         MafaError::InvalidTimeoutPageLoad
-    //         | MafaError::InvalidTimeoutScript
-    //         | MafaError::InvalidSocks5Proxy
-    //         | MafaError::InvalidNumTweets
-    //         | MafaError::InvalidWrapWidth
-    //         | MafaError::AllCachesInvalid
-    //         | MafaError::CacheNotBuildable
-    //         | MafaError::WebDrvCmdRejected(_, _)
-    //         | MafaError::UnexpectedWda(_) => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
-    //                 cate: Category::Twtl,
-    //                 err: err_new,
-    //             });
-    //             return 2;
-    //         }
-    //         _ => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
-    //                 cate: Category::Twtl,
-    //                 err: err_new,
-    //             });
-    //             return 2;
-    //         }
-    //     },
-    // }
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Twtl,
-    //     is_fin: true,
-    // });
 
     match client.handle(None) {
         Ok((ewrk, ret)) => {
@@ -1053,55 +823,7 @@ fn workflow_camd(
 
     let camd_in = camd_in.expect("buggy");
 
-    // silent
-    // if !mafa_in.silent {
-    //     if camd_in.is_silent() {
-    //         lock_or_rtn!(ntf).set_silent();
-    //     } else {
-    //         // notifier.set_nsilent();
-    //     }
-    // }
-
     let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, camd_in, wda_inst);
-
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Camd,
-    //     is_fin: false,
-    // });
-    // match CamdClient::new(mafad, Arc::clone(&ntf), mafa_in, camd_in) {
-    //     Ok(ret) => ag = ret,
-    //     Err(err_new) => match err_new {
-    //         MafaError::InvalidTimeoutPageLoad
-    //         | MafaError::InvalidTimeoutScript
-    //         | MafaError::InvalidSocks5Proxy
-    //         | MafaError::InvalidSourceLang
-    //         | MafaError::InvalidTargetLang
-    //         | MafaError::AllCachesInvalid
-    //         | MafaError::CacheNotBuildable
-    //         | MafaError::WebDrvCmdRejected(_, _)
-    //         | MafaError::UnexpectedWda(_) => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
-    //                 cate: Category::Camd,
-    //                 err: err_new,
-    //             });
-
-    //             return 2;
-    //         }
-    //         _ => {
-    //             lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
-    //                 cate: Category::Camd,
-    //                 err: err_new,
-    //             });
-
-    //             return 2;
-    //         }
-    //     },
-    // }
-
-    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-    //     cate: Category::Camd,
-    //     is_fin: true,
-    // });
 
     match client.handle(None) {
         Ok((eurk, ret)) => {

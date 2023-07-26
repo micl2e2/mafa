@@ -7,8 +7,8 @@ mod twtl_err {
     use mafa::error::MafaError;
     use mafa::ev_ntf::EventNotifier;
     use mafa::mafadata::MafaData;
-    use mafa::twtl::TwtlClient;
     use mafa::twtl::TwtlInput;
+    use mafa::MafaClient;
     use mafa::MafaInput;
     use wda::WdaError::FetchWebDriver;
 
@@ -29,11 +29,12 @@ mod twtl_err {
         match MafaInput::from_ca_matched(&matched) {
             Ok(mafa_in) => match matched.subcommand() {
                 Some(("twtl", sub_m)) => {
-                    let mafad = MafaData::init();
-                    let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
-                    let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let ag = TwtlClient::new(&mafad, ntf, &mafa_in, twtl_in);
-                    if let Err(e) = ag {
+                    // let mafad = MafaData::init();
+                    // let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
+                    // let ntf = Arc::new(Mutex::new(EventNotifier::new()));
+                    let wda_inst = mafa::init_wda(&mafa_in);
+                    // let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, twtl_in, &wda_inst);
+                    if let Err(e) = wda_inst {
                         match e {
                             MafaError::InvalidSocks5Proxy
                             | MafaError::UnexpectedWda(FetchWebDriver(_)) => {}
@@ -88,12 +89,13 @@ mod twtl_err {
                     ];
                     let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag = TwtlClient::new(&mafad, ntf, &mafa_in, twtl_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, twtl_in, &wda_inst);
                     match ag.handle(Some(likely_failed_cache)) {
                         Ok(res) => assert!(false, "ok: {:?}", res),
                         Err(e) => match e {
-			    #[cfg(not(feature = "tst_twtl_logined"))]
-                            MafaError::RequireLogin =>{}
+                            #[cfg(not(feature = "tst_twtl_logined"))]
+                            MafaError::RequireLogin => {}
                             MafaError::AllCachesInvalid => {}
                             _ => assert!(false, "unexpected error {:?}", e),
                         },
@@ -137,11 +139,12 @@ mod twtl_err {
                     let mafad = MafaData::init();
                     let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag = TwtlClient::new(&mafad, ntf, &mafa_in, twtl_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, twtl_in, &wda_inst);
                     if let Err(e) = ag.handle(None) {
                         match e {
-			    #[cfg(not(feature = "tst_twtl_logined"))]
-                            MafaError::RequireLogin =>{}
+                            #[cfg(not(feature = "tst_twtl_logined"))]
+                            MafaError::RequireLogin => {}
                             MafaError::AllCachesInvalid => {}
                             _ => assert!(false, "unexpected error {:?}", e),
                         }

@@ -6,9 +6,9 @@ mod gtrans_res {
     use mafa;
     use mafa::ev_ntf::EurKind;
     use mafa::ev_ntf::EventNotifier;
-    use mafa::gtrans::GtransClient;
     use mafa::gtrans::GtransInput;
     use mafa::mafadata::MafaData;
+    use mafa::MafaClient;
     use mafa::MafaInput;
 
     #[test]
@@ -38,8 +38,8 @@ mod gtrans_res {
                     let mafad = MafaData::init();
                     let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag =
-                        GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
                     match ag.handle(None) {
                         Ok((ewrk, ret)) => {
                             dbg!(&ret);
@@ -73,8 +73,8 @@ mod gtrans_res {
                     let mafad = MafaData::init();
                     let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag =
-                        GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
                     match ag.handle(None) {
                         Ok((ewrk, ret)) => {
                             dbg!(&ret);

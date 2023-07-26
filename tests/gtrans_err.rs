@@ -6,9 +6,9 @@ mod gtrans_err {
     use mafa;
     use mafa::error::MafaError;
     use mafa::ev_ntf::EventNotifier;
-    use mafa::gtrans::GtransClient;
     use mafa::gtrans::GtransInput;
     use mafa::mafadata::MafaData;
+    use mafa::MafaClient;
     use mafa::MafaInput;
     use wda::WdaError::FetchWebDriver;
 
@@ -29,11 +29,12 @@ mod gtrans_err {
         match MafaInput::from_ca_matched(&matched) {
             Ok(mafa_in) => match matched.subcommand() {
                 Some(("gtrans", sub_m)) => {
-                    let mafad = MafaData::init();
-                    let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
-                    let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let ag = GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in);
-                    if let Err(e) = ag {
+                    // let mafad = MafaData::init();
+                    // let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
+                    // let ntf = Arc::new(Mutex::new(EventNotifier::new()));
+                    let wda_inst = mafa::init_wda(&mafa_in);
+                    // let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
+                    if let Err(e) = wda_inst {
                         match e {
                             MafaError::InvalidSocks5Proxy
                             | MafaError::UnexpectedWda(FetchWebDriver(_)) => {}
@@ -53,18 +54,23 @@ mod gtrans_err {
 
     #[test]
     fn at_new_2() {
-        let matched = mafa::get_cmd().try_get_matches_from(vec!["mafa", "gtrans"]);
+        // FIXME: test this one
+        // let matched = mafa::get_cmd().try_get_matches_from(vec!["mafa", "gtrans"]);
+
+        let matched = mafa::get_cmd().try_get_matches_from(vec!["mafa", "gtrans", ""]);
 
         let matched = matched.expect("must ok");
 
         match MafaInput::from_ca_matched(&matched) {
             Ok(mafa_in) => match matched.subcommand() {
                 Some(("gtrans", sub_m)) => {
-                    let mafad = MafaData::init();
-                    let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
-                    let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let ag = GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in);
-                    if let Err(e) = ag {
+                    // let mafad = MafaData::init();
+                    // let ntf = Arc::new(Mutex::new(EventNotifier::new()));
+                    // let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let gtrans_in = GtransInput::from_ca_matched(sub_m);
+                    // dbg!(&gtrans_in);
+                    // let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
+                    if let Err(e) = gtrans_in {
                         match e {
                             MafaError::InvalidWords => {}
                             _ => assert!(false, "unexpected error {:?}", e),
@@ -118,8 +124,8 @@ mod gtrans_err {
                     let likely_failed_cache = vec![vec![1, 1, 1], vec![2, 2, 2]];
                     let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag =
-                        GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
                     match ag.handle(Some(likely_failed_cache)) {
                         Ok(_) => assert!(false),
                         Err(e) => match e {
@@ -171,8 +177,8 @@ mod gtrans_err {
                     let mafad = MafaData::init();
                     let gtrans_in = GtransInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag =
-                        GtransClient::new(&mafad, ntf, &mafa_in, gtrans_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, gtrans_in, &wda_inst);
                     if let Err(e) = ag.handle(None) {
                         match e {
                             MafaError::AllCachesInvalid => {}

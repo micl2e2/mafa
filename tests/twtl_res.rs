@@ -7,8 +7,8 @@ mod twtl_res {
     use mafa::ev_ntf::EurKind;
     use mafa::ev_ntf::EventNotifier;
     use mafa::mafadata::MafaData;
-    use mafa::twtl::TwtlClient;
     use mafa::twtl::TwtlInput;
+    use mafa::MafaClient;
     use mafa::MafaError;
     use mafa::MafaInput;
 
@@ -41,7 +41,8 @@ mod twtl_res {
                     let mafad = MafaData::init();
                     let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
                     let ntf = Arc::new(Mutex::new(EventNotifier::new()));
-                    let mut ag = TwtlClient::new(&mafad, ntf, &mafa_in, twtl_in).expect("must ok");
+                    let wda_inst = mafa::init_wda(&mafa_in).expect("bug");
+                    let mut ag = MafaClient::new(&mafad, ntf, &mafa_in, twtl_in, &wda_inst);
                     match ag.handle(None) {
                         Ok((ewrk, ret)) => {
                             dbg!(&ret);
@@ -59,8 +60,8 @@ mod twtl_res {
                             // username
                             assert!(ret.contains("mafa_rs"));
                         }
-			#[cfg(not(feature = "tst_twtl_logined"))]
-                        Err(MafaError::RequireLogin) =>{}
+                        #[cfg(not(feature = "tst_twtl_logined"))]
+                        Err(MafaError::RequireLogin) => {}
                         Err(e) => assert!(false, "unexpected error {:?}", e),
                     }
                 }
