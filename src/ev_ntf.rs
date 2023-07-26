@@ -205,7 +205,7 @@ impl EventNotifier {
                     println!();
                 }
                 // if start by _, we dont print anything
-                if output.as_bytes()[0] != b'_' {
+                if output.len() > 0 && output.as_bytes()[0] != b'_' {
                     println!("{}", output);
                 }
             }
