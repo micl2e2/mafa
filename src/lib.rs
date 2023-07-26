@@ -508,22 +508,22 @@ ones under normal mode, i.e., -h for short help, --help for long help.
 //
 
 #[derive(Debug)]
-pub struct MafaClient<'a, 'b, I, C> {
+pub struct MafaClient<'a, 'b, 'c, I, C> {
     mafad: &'a MafaData,
     ntf: Arc<Mutex<EventNotifier>>,
     input: &'b MafaInput,
     sub_input: I,
-    wda: WebDrvAstn<GeckoDriver>,
+    wda: &'c WebDrvAstn<GeckoDriver>,
     caches: Vec<C>,
 }
 
-impl<'a, 'b, I, C: Default> MafaClient<'a, 'b, I, C> {
+impl<'a, 'b, 'c, I, C: Default> MafaClient<'a, 'b, 'c, I, C> {
     pub fn new(
         mafad: &'a MafaData,
         ntf: Arc<Mutex<EventNotifier>>,
         mafa_in: &'b MafaInput,
         sub_in: I,
-        wda_inst: WebDrvAstn<GeckoDriver>,
+        wda_inst: &'c WebDrvAstn<GeckoDriver>,
     ) -> Self {
         MafaClient {
             mafad,

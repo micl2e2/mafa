@@ -2055,7 +2055,7 @@ mod utst_merged {
     }
 }
 
-impl<'a, 'b> MafaClient<'a, 'b, TwtlInput, UlPath> {
+impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
     fn notify(&self, ev: MafaEvent) -> Result<()> {
         self.ntf
             .lock()

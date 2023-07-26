@@ -184,6 +184,21 @@ impl GtransInput {
         }
     }
 
+    pub fn from_i_mode2(args: Vec<&str>) -> Result<GtransInput> {
+        let cmd_gtrans = get_cmd();
+
+        let m = cmd_gtrans.try_get_matches_from(args);
+
+        match m {
+            Ok(ca_matched) => {
+                let gtrans_in = GtransInput::from_ca_matched(&ca_matched)?;
+                Ok(gtrans_in)
+            }
+            // this will print helper
+            Err(err_match) => Err(MafaError::ClapMatchError(err_match.render())),
+        }
+    }
+
     fn merge(mut gtrans_in: GtransInput, mafa_in: &MafaInput) -> Result<Self> {
         // mafa wins
         if mafa_in.silent {
@@ -770,7 +785,7 @@ impl UpathCache {
     }
 }
 
-impl<'a, 'b> MafaClient<'a, 'b, GtransInput, Upath> {
+impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, GtransInput, Upath> {
     ///
     /// Returned `String` is pretty-printed.
     pub fn handle(&mut self, pred_caches: Option<Vec<Vec<u8>>>) -> Result<(EurKind, String)> {

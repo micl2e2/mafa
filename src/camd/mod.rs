@@ -1298,7 +1298,7 @@ mod utst_merged {
     }
 }
 
-impl<'a, 'b> MafaClient<'a, 'b, CamdInput, Upath> {
+impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, CamdInput, Upath> {
     fn upath_locate(&self, words: &str, expl: &str, wait_before_extract: u64) -> Result<Vec<u8>> {
         let url = format!(
             "https://dictionary.cambridge.org/us/dictionary/english/{}",
