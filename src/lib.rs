@@ -53,7 +53,7 @@ pub struct MafaInput {
     pub socks5: String,
     pub gui: bool,
     pub list_profile: bool,
-    //TODO20230727: add ascii,elapsed,cachm
+    // TODO20230727: add ascii,elapsed,cachm
 }
 
 impl MafaInput {
