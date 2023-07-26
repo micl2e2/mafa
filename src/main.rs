@@ -54,13 +54,24 @@ fn main() {
                 let mut ignore_subcmd = false;
 
                 if mafa_in.silent {
-                    ntf.lock().expect("buggy").set_silent();
+                    ntf.lock().expect("bug").set_silent();
                 }
 
                 if mafa_in.nocolor {
-                    ntf.lock().expect("buggy").set_nocolor();
+                    ntf.lock().expect("bug").set_nocolor();
                 }
 
+                ntf.lock().expect("bug").notify(MafaEvent::Initialize {
+                    cate: Category::Mafa,
+                    is_fin: false,
+                });
+                let wda_inst = mafa::init_wda(&mafa_in).expect("bug"); // FIXME: handle error
+                ntf.lock().expect("bug").notify(MafaEvent::Initialize {
+                    cate: Category::Mafa,
+                    is_fin: true,
+                });
+
+                // needs alive wda
                 if mafa_in.list_profile {
                     ignore_subcmd = true;
 
@@ -73,35 +84,35 @@ fn main() {
                         });
                 }
 
-                // subcommand
-                if !ignore_subcmd {
-                    match matched.subcommand() {
-                        #[cfg(feature = "gtrans")]
-                        Some(("gtrans", sub_m)) => {
-                            let gtrans_in = GtransInput::from_ca_matched(sub_m);
-                            exit_code =
-                                workflow_gtrans(&mafad, &mafa_in, gtrans_in, Arc::clone(&ntf));
-                        }
+                // // subcommand
+                // if !ignore_subcmd {
+                //     match matched.subcommand() {
+                //         #[cfg(feature = "gtrans")]
+                //         Some(("gtrans", sub_m)) => {
+                //             let gtrans_in = GtransInput::from_ca_matched(sub_m);
+                //             exit_code =
+                //                 workflow_gtrans(&mafad, &mafa_in, gtrans_in, Arc::clone(&ntf));
+                //         }
 
-                        #[cfg(feature = "twtl")]
-                        Some(("twtl", sub_m)) => {
-                            let twtl_in = TwtlInput::from_ca_matched(sub_m);
-                            exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
-                        }
+                //         #[cfg(feature = "twtl")]
+                //         Some(("twtl", sub_m)) => {
+                //             let twtl_in = TwtlInput::from_ca_matched(sub_m);
+                //             exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
+                //         }
 
-                        #[cfg(feature = "camd")]
-                        Some(("camd", sub_m)) => {
-                            let camd_in = CamdInput::from_ca_matched(sub_m);
-                            exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
-                        }
+                //         #[cfg(feature = "camd")]
+                //         Some(("camd", sub_m)) => {
+                //             let camd_in = CamdInput::from_ca_matched(sub_m);
+                //             exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
+                //         }
 
-                        #[cfg(feature = "imode")]
-                        Some(("i", _)) => {
-                            exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
-                        }
-                        _ => {}
-                    }
-                }
+                //         #[cfg(feature = "imode")]
+                //         Some(("i", _)) => {
+                //             exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
+                //         }
+                //         _ => {}
+                //     }
+                // }
             }
             Err(err_in) => {
                 ntf.lock()
@@ -114,7 +125,7 @@ fn main() {
             }
         },
         Err(err_match) => {
-            err_match.print().unwrap();
+            err_match.print().unwrap(); // this will print helper
         }
     }
 
@@ -1082,3 +1093,5 @@ fn workflow_camd(
 
     // return 0;
 }
+
+//

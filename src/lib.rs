@@ -7,6 +7,12 @@
 // with the license.
 //
 
+use crate::ev_ntf::EventNotifier;
+use std::borrow::Cow;
+use std::sync::Arc;
+use std::sync::Mutex;
+use wda::{GeckoDriver, WdaError, WdaSett, WdcError, WebDrvAstn};
+
 use clap::Arg as ClapArg;
 use clap::ArgAction as ClapArgAction;
 use clap::ArgMatches as ClapArgMatches;
@@ -21,6 +27,7 @@ use error::Result;
 mod private_macros;
 
 pub mod mafadata;
+use mafadata::MafaData;
 
 pub mod ev_ntf;
 
@@ -493,4 +500,61 @@ ones under normal mode, i.e., -h for short help, --help for long help.
         .arg(opt_list_profile);
 
     cmd_mafa
+}
+
+//
+
+#[derive(Debug)]
+pub struct MafaClient<'a, I, C> {
+    mafad: &'a MafaData,
+    ntf: Arc<Mutex<EventNotifier>>,
+    input: MafaInput,
+    sub_input: I,
+    wda: WebDrvAstn<GeckoDriver>,
+    upaths: Vec<C>,
+}
+
+fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {
+    let mut wda_setts = vec![];
+
+    if !mafa_in.gui {
+        wda_setts.push(WdaSett::NoGui);
+    }
+
+    if comm::is_valid_socks5(&mafa_in.socks5) {
+        wda_setts.push(WdaSett::PrepareUseSocksProxy(Cow::Borrowed(
+            &mafa_in.socks5,
+        )));
+        wda_setts.push(WdaSett::Socks5Proxy(Cow::Borrowed(&mafa_in.socks5)));
+        wda_setts.push(WdaSett::ProxyDnsSocks5);
+    }
+    wda_setts.push(WdaSett::PageLoadTimeout(mafa_in.tout_page_load));
+    wda_setts.push(WdaSett::ScriptTimeout(mafa_in.tout_script));
+
+    dbgg!(&wda_setts);
+
+    wda_setts
+}
+
+pub fn init_wda(mafa_in: &MafaInput) -> Result<WebDrvAstn<GeckoDriver>> {
+    let wda_inst: WebDrvAstn<GeckoDriver>;
+    let wda_setts = get_wda_setts(&mafa_in);
+    dbgg!(&wda_setts);
+    match WebDrvAstn::<GeckoDriver>::new(wda_setts) {
+        Ok(ret) => wda_inst = ret,
+        Err(err_wda) => match err_wda {
+            WdaError::WdcNotReady(WdcError::BadDrvCmd(err, msg), _) => {
+                if msg.contains("socksProxy is not a valid URL") {
+                    return Err(MafaError::InvalidSocks5Proxy);
+                } else {
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                }
+            }
+            _ => {
+                return Err(MafaError::UnexpectedWda(err_wda));
+            }
+        },
+    };
+
+    Ok(wda_inst)
 }
