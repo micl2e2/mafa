@@ -164,6 +164,21 @@ impl CamdInput {
         }
     }
 
+    pub fn from_i_mode2(args: Vec<&str>) -> Result<CamdInput> {
+        let cmd_camd = get_cmd();
+
+        let m = cmd_camd.try_get_matches_from(args);
+
+        match m {
+            Ok(ca_matched) => {
+                let camd_in = CamdInput::from_ca_matched(&ca_matched)?;
+                Ok(camd_in)
+            }
+            // this will print helper
+            Err(err_match) => Err(MafaError::ClapMatchError(err_match.render())),
+        }
+    }
+
     fn merge(mut camd_in: CamdInput, mafa_in: &MafaInput) -> Result<Self> {
         // mafa wins
         if mafa_in.silent {
