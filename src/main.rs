@@ -7,6 +7,11 @@
 // with the license.
 //
 
+use wda::GeckoDriver;
+use wda::WebDrvAstn;
+
+use mafa::MafaClient;
+
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -61,6 +66,7 @@ fn main() {
                     ntf.lock().expect("bug").set_nocolor();
                 }
 
+                // init wda
                 ntf.lock().expect("bug").notify(MafaEvent::Initialize {
                     cate: Category::Mafa,
                     is_fin: false,
@@ -82,37 +88,44 @@ fn main() {
                             kind: EurKind::ListProfile,
                             output: "listing...".into(),
                         });
+
+                    todo!();
                 }
 
-                // // subcommand
-                // if !ignore_subcmd {
-                //     match matched.subcommand() {
-                //         #[cfg(feature = "gtrans")]
-                //         Some(("gtrans", sub_m)) => {
-                //             let gtrans_in = GtransInput::from_ca_matched(sub_m);
-                //             exit_code =
-                //                 workflow_gtrans(&mafad, &mafa_in, gtrans_in, Arc::clone(&ntf));
-                //         }
+                // subcommand
+                if !ignore_subcmd {
+                    match matched.subcommand() {
+                        #[cfg(feature = "gtrans")]
+                        Some(("gtrans", sub_m)) => {
+                            let gtrans_in = GtransInput::from_ca_matched(sub_m);
+                            exit_code = workflow_gtrans(
+                                &mafad,
+                                &mafa_in,
+                                gtrans_in,
+                                wda_inst,
+                                Arc::clone(&ntf),
+                            );
+                        }
 
-                //         #[cfg(feature = "twtl")]
-                //         Some(("twtl", sub_m)) => {
-                //             let twtl_in = TwtlInput::from_ca_matched(sub_m);
-                //             exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
-                //         }
+                        #[cfg(feature = "twtl")]
+                        Some(("twtl", sub_m)) => {
+                            let twtl_in = TwtlInput::from_ca_matched(sub_m);
+                            exit_code = workflow_twtl(&mafad, &mafa_in, twtl_in, Arc::clone(&ntf));
+                        }
 
-                //         #[cfg(feature = "camd")]
-                //         Some(("camd", sub_m)) => {
-                //             let camd_in = CamdInput::from_ca_matched(sub_m);
-                //             exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
-                //         }
+                        #[cfg(feature = "camd")]
+                        Some(("camd", sub_m)) => {
+                            let camd_in = CamdInput::from_ca_matched(sub_m);
+                            exit_code = workflow_camd(&mafad, &mafa_in, camd_in, Arc::clone(&ntf));
+                        }
 
-                //         #[cfg(feature = "imode")]
-                //         Some(("i", _)) => {
-                //             exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
-                //         }
-                //         _ => {}
-                //     }
-                // }
+                        #[cfg(feature = "imode")]
+                        Some(("i", _)) => {
+                            exit_code = enter_i_mode(&mafad, &mafa_in, Arc::clone(&ntf));
+                        }
+                        _ => {}
+                    }
+                }
             }
             Err(err_in) => {
                 ntf.lock()
@@ -714,6 +727,7 @@ fn workflow_gtrans(
     mafad: &MafaData,
     mafa_in: &MafaInput,
     gtrans_in: Result<GtransInput>,
+    wda_inst: WebDrvAstn<GeckoDriver>,
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> u8 {
     if let Err(err_in) = gtrans_in {
@@ -745,67 +759,62 @@ fn workflow_gtrans(
     let gtrans_in = gtrans_in.expect("buggy");
 
     // list lang
-    if gtrans_in.is_list_lang() {
-        lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
-            cate: Category::Gtrans,
-            kind: EurKind::GtransAllLang,
-            output: GtransClient::list_all_lang().into(),
-        });
+    // if gtrans_in.is_list_lang() {
+    //     lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
+    //         cate: Category::Gtrans,
+    //         kind: EurKind::GtransAllLang,
+    //         output: GtransClient::list_all_lang().into(),
+    //     });
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
-    // silent
-    if !mafa_in.silent {
-        if gtrans_in.is_silent() {
-            lock_or_rtn!(ntf).set_silent();
-        } else {
-            // notifier.set_nsilent();
-        }
-    }
+    let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
 
-    let mut ag;
+    // client.handle();
 
-    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-        cate: Category::Gtrans,
-        is_fin: false,
-    });
-    match GtransClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in) {
-        Ok(ret) => ag = ret,
-        Err(err_new) => match err_new {
-            MafaError::InvalidTimeoutPageLoad
-            | MafaError::InvalidTimeoutScript
-            | MafaError::InvalidSocks5Proxy
-            | MafaError::InvalidSourceLang
-            | MafaError::InvalidTargetLang
-            | MafaError::AllCachesInvalid
-            | MafaError::CacheNotBuildable
-            | MafaError::WebDrvCmdRejected(_, _)
-            | MafaError::UnexpectedWda(_) => {
-                lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
-                    cate: Category::Gtrans,
-                    err: err_new,
-                });
+    // let mut ag;
 
-                return 2;
-            }
-            _ => {
-                lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
-                    cate: Category::Gtrans,
-                    err: err_new,
-                });
+    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+    //     cate: Category::Gtrans,
+    //     is_fin: false,
+    // });
+    // match GtransClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in) {
+    //     Ok(ret) => ag = ret,
+    //     Err(err_new) => match err_new {
+    //         MafaError::InvalidTimeoutPageLoad
+    //         | MafaError::InvalidTimeoutScript
+    //         | MafaError::InvalidSocks5Proxy
+    //         | MafaError::InvalidSourceLang
+    //         | MafaError::InvalidTargetLang
+    //         | MafaError::AllCachesInvalid
+    //         | MafaError::CacheNotBuildable
+    //         | MafaError::WebDrvCmdRejected(_, _)
+    //         | MafaError::UnexpectedWda(_) => {
+    //             lock_or_rtn!(ntf).notify(MafaEvent::FatalMafaError {
+    //                 cate: Category::Gtrans,
+    //                 err: err_new,
+    //             });
 
-                return 2;
-            }
-        },
-    }
+    //             return 2;
+    //         }
+    //         _ => {
+    //             lock_or_rtn!(ntf).notify(MafaEvent::HandlerMissed {
+    //                 cate: Category::Gtrans,
+    //                 err: err_new,
+    //             });
 
-    lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
-        cate: Category::Gtrans,
-        is_fin: true,
-    });
+    //             return 2;
+    //         }
+    //     },
+    // }
 
-    match ag.handle(None) {
+    // lock_or_rtn!(ntf).notify(MafaEvent::Initialize {
+    //     cate: Category::Gtrans,
+    //     is_fin: true,
+    // });
+
+    match client.handle(None) {
         Ok((eurk, ret)) => {
             lock_or_rtn!(ntf).notify(MafaEvent::ExactUserRequest {
                 cate: Category::Gtrans,
@@ -813,9 +822,10 @@ fn workflow_gtrans(
                 output: ret,
             });
 
-            if ag.is_elap_req() {
-                lock_or_rtn!(ntf).elap(Category::Gtrans);
-            }
+            // FIXME: move to mafa
+            // if client.is_elap_req() {
+            // lock_or_rtn!(ntf).elap(Category::Gtrans);
+            // }
 
             return 0;
         }
@@ -844,7 +854,7 @@ fn workflow_gtrans(
         },
     }
 
-    // return 0;
+    return 0;
 }
 
 #[cfg(feature = "twtl")]

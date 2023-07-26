@@ -34,6 +34,7 @@ use crate::ev_ntf::EurKind;
 use crate::ev_ntf::EventNotifier;
 use crate::ev_ntf::MafaEvent;
 
+use crate::MafaClient;
 use crate::MafaInput;
 
 use crate::comm;
@@ -47,7 +48,7 @@ use clap::Command as ClapCommand;
 #[derive(Debug, Default)]
 pub struct GtransInput {
     words: String,
-    list_lang: bool,
+    pub(crate) list_lang: bool,
     src_lang: String,
     tgt_lang: String,
     cachm: CacheMechanism,
@@ -729,7 +730,7 @@ pub fn get_cmd() -> ClapCommand {
 }
 
 #[derive(Debug, Default)]
-struct Upath(Vec<u8>);
+pub struct Upath(Vec<u8>);
 
 #[derive(Debug, Default)]
 struct UpathCache(Vec<Upath>);
@@ -768,6 +769,416 @@ impl UpathCache {
         Ok(Self(ret))
     }
 }
+
+impl<'a, 'b> MafaClient<'a, 'b, GtransInput, Upath> {
+    ///
+    /// Returned `String` is pretty-printed.
+    pub fn handle(&mut self, pred_caches: Option<Vec<Vec<u8>>>) -> Result<(EurKind, String)> {
+        if self.sub_input.list_lang {
+            return Ok((EurKind::GtransAllLang, list_all_lang().to_string()));
+        }
+
+        if pred_caches.is_none() {
+            self.try_rebuild_cache()?;
+        } else {
+            let pred_caches = pred_caches.ok_or(MafaError::BugFound(4567))?;
+            pred_caches
+                .iter()
+                .for_each(|v| self.caches.push(Upath(v.clone())));
+        }
+
+        if self.caches.len() == 0 {
+            panic!("buggy");
+        }
+
+        let source_lang = &self.sub_input.src_lang;
+        let target_lang = &self.sub_input.tgt_lang;
+
+        let orig_words = &self.sub_input.words;
+
+        self.notify(MafaEvent::FetchResult {
+            cate: Category::Gtrans,
+            is_fin: false,
+        })?;
+        let translated = self.fetch(orig_words, source_lang, target_lang)?;
+        self.notify(MafaEvent::FetchResult {
+            cate: Category::Gtrans,
+            is_fin: true,
+        })?;
+
+        let gtrans_res = GtransResult::from_str(source_lang, target_lang, orig_words, &translated)?;
+        dbgg!(&gtrans_res);
+
+        Ok((
+            EurKind::GtransResult,
+            gtrans_res.pretty_print(
+                self.sub_input.nocolor.is_some(),
+                self.sub_input.ascii,
+                self.sub_input.wrap_width,
+            )?,
+        ))
+    }
+
+    fn upaths_locate(
+        &self,
+        en_words: &str,
+        tc_words: &str,
+        wait_before_extract: u64,
+    ) -> Result<Vec<u8>> {
+        let url = format!(
+            "https://translate.google.com/?sl=en&tl=zh-TW&text={}&op=translate",
+            en_words
+        );
+
+        if let Err(err_navi) = self.wda.go_url(&url) {
+            if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_navi {
+                dbgg!(123);
+                return Err(MafaError::WebDrvCmdRejected(err, msg));
+            } else {
+                return Err(MafaError::UnexpectedWda(err_navi));
+            }
+        }
+
+        sleep(Duration::from_millis(wait_before_extract));
+
+        // script/gtrans-upath.js
+        let js_in="console.log=function(){};function locate_elem(e){var o=[];function l(e,n,t){let c=e.childNodes.length;for(let d=0;d<c;d++){let c=e.childNodes[d];if(c.innerText&&c.innerText==n){console.log('yes',c);o=[...t,d]}else{l(c,n,[...t,d])}}}let n=e;l(document.body,n,[]);console.log(o);let t=o.map((()=>document.body));console.log(t);for(let e=0;e<o.length;e++){for(let l=0;l<o[e].length;l++){t[e]=t[e].childNodes[o[e][l]]}}return o}return locate_elem(arguments[0]);";
+
+        let js_out;
+        match self.wda.eval(&js_in, vec![tc_words]) {
+            Ok(ret) => js_out = ret,
+            Err(err_eval) => {
+                if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_eval {
+                    dbgg!(123);
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_eval));
+                }
+            }
+        }
+
+        dbgg!(&js_out);
+
+        let obj_out = serde_json::from_str::<Vec<u8>>(&js_out).unwrap();
+
+        Ok(obj_out)
+    }
+
+    fn notify(&self, ev: MafaEvent) -> Result<()> {
+        self.ntf
+            .lock()
+            .map_err(|_| MafaError::BugFound(7890))?
+            .notify(ev);
+
+        Ok(())
+    }
+
+    fn refresh_upath(&mut self, rebuild_cache: bool) -> Result<()> {
+        if !rebuild_cache {
+            let caches_from_files =
+                UpathCache::from_pbuf(self.mafad.pathto_exist_cache("gtrans")?)?;
+            self.caches = caches_from_files.0;
+            return Ok(());
+        }
+
+        let mut upath1: Option<Vec<u8>> = None;
+        let mut upath2: Option<Vec<u8>> = None;
+
+        // let mut time_before = 50; // test purpose
+        let mut time_before = 500; // in millis
+
+        // let mut try_times = 3; // test purpose
+        let mut try_times = 5;
+
+        while try_times > 0 {
+            if upath1.is_none() {
+                match self.upaths_locate("OMG", "\"我的天啊\"", time_before) {
+                    Ok(ret) => {
+                        if ret.len() > 0 {
+                            upath1 = Some(ret)
+                        }
+                    }
+                    Err(err_loc) => match err_loc {
+                        MafaError::WebDrvCmdRejected(ref err, _) => {
+                            // only retry on timeout
+                            if err.contains("timeout") {
+                                dbgmsg!("upath1 timeout");
+                            } else {
+                                return Err(err_loc);
+                            }
+                        }
+                        _ => return Err(err_loc),
+                    },
+                }
+            }
+
+            if upath2.is_none() {
+                match self.upaths_locate("ASAP", "\"盡快\"", time_before) {
+                    Ok(ret) => {
+                        if ret.len() > 0 {
+                            upath2 = Some(ret)
+                        }
+                    }
+                    Err(err_loc) => match err_loc {
+                        MafaError::WebDrvCmdRejected(ref err, _) => {
+                            // only retry on timeout
+                            if err.contains("timeout") {
+                                dbgmsg!("upath2 timeout");
+                            } else {
+                                return Err(err_loc);
+                            }
+                        }
+                        _ => return Err(err_loc),
+                    },
+                }
+            }
+
+            if upath1.is_some() && upath2.is_some() {
+                self.notify(MafaEvent::CacheRetry {
+                    cate: Category::Gtrans,
+                    is_fin: true,
+                })?;
+                break;
+            } else {
+                self.notify(MafaEvent::CacheRetry {
+                    cate: Category::Gtrans,
+                    is_fin: false,
+                })?;
+                try_times -= 1;
+                time_before += time_before;
+                dbgmsg!("need retry {} {}", try_times, time_before);
+            }
+        }
+
+        dbgg!(&try_times);
+
+        if upath1.is_none() || upath2.is_none() {
+            return Err(MafaError::CacheRebuildFail(
+                CacheRebuildFailKind::UpathNotFound,
+            ));
+        }
+
+        let upath1 = upath1.expect("buggy");
+        let upath2 = upath2.expect("buggy");
+
+        let sig_upath_len = upath1.len();
+        if upath2.len() != sig_upath_len {
+            return Err(MafaError::CacheRebuildFail(
+                CacheRebuildFailKind::UpathLenNotMatched,
+            ));
+        }
+
+        for i in 0..sig_upath_len {
+            if upath1[i] != upath2[i] {
+                return Err(MafaError::CacheRebuildFail(
+                    CacheRebuildFailKind::UpathValNotMatched,
+                ));
+            }
+        }
+
+        let u_part = serde_json::to_string(&upath1).unwrap();
+        let comb = format!("{}\n", u_part);
+        dbgg!(&comb);
+
+        self.mafad
+            .cache_append("gtrans", &comb, &format!("{}-", &comb))?;
+
+        self.caches.push(Upath(upath1));
+
+        Ok(())
+    }
+
+    fn cache_on_gh(&self, url: &str) -> Result<String> {
+        match self.wda.go_url(url) {
+            Ok(_) => {}
+            Err(err_navi) => {
+                if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_navi {
+                    dbgg!(123);
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_navi));
+                }
+            }
+        }
+
+        let jsout: String;
+        let jsin = "return document.getElementsByTagName('pre')[0].innerText;";
+
+        match self.wda.eval(&jsin, vec![]) {
+            Ok(ret) => jsout = ret,
+            Err(err_eval) => {
+                if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_eval {
+                    dbgg!(123);
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_eval));
+                }
+            }
+        }
+
+        // let jsout = jsout.replace("\"", "").replace("\\n", "\n");
+        let jsout = jsout.replace('"', "").replace("\\n", "\n");
+
+        dbgg!(&jsout);
+
+        Ok(jsout)
+    }
+
+    fn try_rebuild_cache(&mut self) -> Result<()> {
+        let mut rebuild_cache = false;
+
+        if let CacheMechanism::Remote = self.sub_input.cachm {
+            let remote_data = self.cache_on_gh(
+                "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/gtrans",
+            )?;
+
+            self.mafad.init_cache("gtrans", &remote_data)?;
+        } else if let CacheMechanism::Local = self.sub_input.cachm {
+            self.mafad.try_init_cache(
+                "gtrans",
+                "[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n-",
+            )?;
+        } else if let CacheMechanism::No = self.sub_input.cachm {
+            rebuild_cache = true;
+        }
+
+        if rebuild_cache {
+            self.notify(MafaEvent::BuildCache {
+                cate: Category::Gtrans,
+                is_fin: false,
+            })?;
+            self.refresh_upath(true)?;
+            self.notify(MafaEvent::BuildCache {
+                cate: Category::Gtrans,
+                is_fin: true,
+            })?;
+        } else {
+            self.refresh_upath(false)?;
+        }
+
+        Ok(())
+    }
+
+    fn fetch(&self, orig_words: &str, sl: &str, tl: &str) -> Result<String> {
+        let mut url = String::from("");
+        url += &format!("https://translate.google.com/?sl={}&tl={}&text=", sl, tl);
+        url += &String::from_utf8_lossy(&comm::percent_encode(orig_words.as_bytes()));
+        url += "&op=translate";
+
+        let mut translate_res = "???".to_string();
+
+        dbgg!(&self.upaths);
+        let mut upaths_i = 0;
+        let upaths_len = self.caches.len();
+
+        // script/gtrans-transres.js
+        let js_get_innertxt = "console.log=function(){};var send_back=arguments[arguments.length-1];var upath=arguments[0];clearInterval(window['gtrans-res']);window['gtrans-res']=setInterval((function(){var e=document.body;if(upath.length>0){for(let n=0;n<upath.length;n++){if(e==undefined){console.log(n);return}else{console.log(123)}e=e.childNodes[upath[n]]}console.log(e);send_back(e.innerText);clearInterval(window['gtrans-res'])}else{console.log(upath)}}),500);";
+
+        let mut is_url_reached = false;
+
+        // try_times = go_url + eval_js
+        let mut try_times = 5; // sufficient to let try again succeed
+
+        // let mut wait_before = 500;
+        let mut wait_before = 100;
+
+        while try_times > 0 {
+            if let Err(err_navi) = self.wda.go_url(&url) {
+                if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_navi {
+                    if err.contains("timeout") {
+                        self.notify(MafaEvent::ConnectTimeoutRetry {
+                            cate: Category::Gtrans,
+                            is_fin: false,
+                        })?;
+                        try_times -= 1;
+                        continue;
+                    } else {
+                        return Err(MafaError::WebDrvCmdRejected(err, msg));
+                    }
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_navi));
+                }
+            }
+
+            is_url_reached = true;
+            self.notify(MafaEvent::ConnectTimeoutRetry {
+                cate: Category::Gtrans,
+                is_fin: true,
+            })?;
+
+            let upath_curr = &self.caches[upaths_i].0;
+            let arg0_detect_err = serde_json::to_string(&upath_curr[..]).unwrap();
+
+            sleep(Duration::from_millis(wait_before));
+
+            match self
+                .wda
+                .eval_async(&js_get_innertxt, vec![&arg0_detect_err])
+            {
+                Ok(retstr) => {
+                    if retstr.contains("Try again") {
+                        dbgg!(&retstr);
+                        self.notify(MafaEvent::SrvTempUnavRetry {
+                            cate: Category::Gtrans,
+                            is_fin: false,
+                        })?;
+                    } else {
+                        dbgg!(&retstr);
+                        // std::thread::sleep(std::time::Duration::from_secs(100));
+                        translate_res = retstr;
+                        self.notify(MafaEvent::SrvTempUnavRetry {
+                            cate: Category::Gtrans,
+                            is_fin: true,
+                        })?;
+                        break;
+                    }
+                }
+
+                Err(err_eval) => {
+                    if let WdaError::WdcFail(WdcError::BadDrvCmd(err, msg)) = err_eval {
+                        if err.contains("timeout") {
+                            upaths_i += 1;
+                            if upaths_i < upaths_len {
+                                self.notify(MafaEvent::TryNextCache {
+                                    cate: Category::Gtrans,
+                                    is_fin: false,
+                                })?;
+                                // continue;
+                            } else {
+                                self.notify(MafaEvent::TryNextCache {
+                                    cate: Category::Gtrans,
+                                    is_fin: true,
+                                })?;
+                                return Err(MafaError::AllCachesInvalid);
+                            }
+                        } else {
+                            return Err(MafaError::WebDrvCmdRejected(err, msg));
+                        }
+                    } else {
+                        return Err(MafaError::UnexpectedWda(err_eval));
+                    }
+                }
+            }
+
+            try_times -= 1;
+            wait_before += wait_before;
+            dbgmsg!("need retry {} {}", try_times, wait_before);
+        }
+
+        self.notify(MafaEvent::TryNextCache {
+            cate: Category::Gtrans,
+            is_fin: true,
+        })?;
+
+        if !is_url_reached {
+            return Err(MafaError::DataFetchedNotReachable);
+        }
+
+        Ok(translate_res)
+    }
+}
+
+// ---------------------------
 
 #[derive(Debug)]
 pub struct GtransClient<'a> {
@@ -1497,6 +1908,145 @@ Yiddish: yi
 Yoruba: yo
 Zulu: zu"
     }
+}
+
+pub(crate) fn list_all_lang() -> &'static str {
+    r"All languages supported by Google Translate (<Language>: <code>):
+
+Detect language: auto
+Afrikaans: af
+Albanian: sq
+Amharic: am
+Arabic: ar
+Armenian: hy
+Assamese: as
+Aymara: ay
+Azerbaijani: az
+Bambara: bm
+Basque: eu
+Belarusian: be
+Bengali: bn
+Bhojpuri: bho
+Bosnian: bs
+Bulgarian: bg
+Catalan: ca
+Cebuano: ceb
+Chichewa: ny
+Chinese (Simplified): zh-CN
+Chinese (Traditional): zh-TW
+Corsican: co
+Croatian: hr
+Czech: cs
+Danish: da
+Dhivehi: dv
+Dogri: doi
+Dutch: nl
+English: en
+Esperanto: eo
+Estonian: et
+Ewe: ee
+Filipino: tl
+Finnish: fi
+French: fr
+Frisian: fy
+Galician: gl
+Georgian: ka
+German: de
+Greek: el
+Guarani: gn
+Gujarati: gu
+Haitian Creole: ht
+Hausa: ha
+Hawaiian: haw
+Hebrew: iw
+Hindi: hi
+Hmong: hmn
+Hungarian: hu
+Icelandic: is
+Igbo: ig
+Ilocano: ilo
+Indonesian: id
+Irish: ga
+Italian: it
+Japanese: ja
+Javanese: jw
+Kannada: kn
+Kazakh: kk
+Khmer: km
+Kinyarwanda: rw
+Konkani: gom
+Korean: ko
+Krio: kri
+Kurdish (Kurmanji): ku
+Kurdish (Sorani): ckb
+Kyrgyz: ky
+Lao: lo
+Latin: la
+Latvian: lv
+Lingala: ln
+Lithuanian: lt
+Luganda: lg
+Luxembourgish: lb
+Macedonian: mk
+Maithili: mai
+Malagasy: mg
+Malay: ms
+Malayalam: ml
+Maltese: mt
+Maori: mi
+Marathi: mr
+Meiteilon (Manipuri): mni-Mtei
+Mizo: lus
+Mongolian: mn
+Myanmar (Burmese): my
+Nepali: ne
+Norwegian: no
+Odia (Oriya): or
+Oromo: om
+Pashto: ps
+Persian: fa
+Polish: pl
+Portuguese: pt
+Punjabi: pa
+Quechua: qu
+Romanian: ro
+Russian: ru
+Samoan: sm
+Sanskrit: sa
+Scots Gaelic: gd
+Sepedi: nso
+Serbian: sr
+Sesotho: st
+Shona: sn
+Sindhi: sd
+Sinhala: si
+Slovak: sk
+Slovenian: sl
+Somali: so
+Spanish: es
+Sundanese: su
+Swahili: sw
+Swedish: sv
+Tajik: tg
+Tamil: ta
+Tatar: tt
+Telugu: te
+Thai: th
+Tigrinya: ti
+Tsonga: ts
+Turkish: tr
+Turkmen: tk
+Twi: ak
+Ukrainian: uk
+Urdu: ur
+Uyghur: ug
+Uzbek: uz
+Vietnamese: vi
+Welsh: cy
+Xhosa: xh
+Yiddish: yi
+Yoruba: yo
+Zulu: zu"
 }
 
 #[derive(Debug, Default)]

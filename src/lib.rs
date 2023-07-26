@@ -7,7 +7,6 @@
 // with the license.
 //
 
-use crate::ev_ntf::EventNotifier;
 use std::borrow::Cow;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -30,6 +29,8 @@ pub mod mafadata;
 use mafadata::MafaData;
 
 pub mod ev_ntf;
+use ev_ntf::EurKind;
+use ev_ntf::EventNotifier;
 
 #[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
 mod comm;
@@ -39,6 +40,8 @@ pub mod twtl;
 
 #[cfg(feature = "gtrans")]
 pub mod gtrans;
+use gtrans::GtransInput;
+use gtrans::Upath;
 
 #[cfg(feature = "camd")]
 pub mod camd;
@@ -505,13 +508,32 @@ ones under normal mode, i.e., -h for short help, --help for long help.
 //
 
 #[derive(Debug)]
-pub struct MafaClient<'a, I, C> {
+pub struct MafaClient<'a, 'b, I, C> {
     mafad: &'a MafaData,
     ntf: Arc<Mutex<EventNotifier>>,
-    input: MafaInput,
+    input: &'b MafaInput,
     sub_input: I,
     wda: WebDrvAstn<GeckoDriver>,
-    upaths: Vec<C>,
+    caches: Vec<C>,
+}
+
+impl<'a, 'b, I, C: Default> MafaClient<'a, 'b, I, C> {
+    pub fn new(
+        mafad: &'a MafaData,
+        ntf: Arc<Mutex<EventNotifier>>,
+        mafa_in: &'b MafaInput,
+        sub_in: I,
+        wda_inst: WebDrvAstn<GeckoDriver>,
+    ) -> Self {
+        MafaClient {
+            mafad,
+            ntf,
+            input: mafa_in,
+            sub_input: sub_in,
+            wda: wda_inst,
+            caches: Default::default(),
+        }
+    }
 }
 
 fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {
