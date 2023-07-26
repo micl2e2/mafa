@@ -133,7 +133,7 @@ fn main() {
 
                         #[cfg(feature = "imode")]
                         Some(("i", _)) => {
-                            exit_code = enter_i_mode(&mafad, &mafa_in, wda_inst, Arc::clone(&ntf));
+                            exit_code = enter_i_mode(&mafad, &mafa_in, &wda_inst, Arc::clone(&ntf));
                         }
                         _ => {}
                     }
@@ -164,7 +164,7 @@ fn main() {
 fn enter_i_mode(
     mafad: &MafaData,
     mafa_in: &MafaInput,
-    wda_inst: WebDrvAstn<GeckoDriver>,
+    wda_inst: &WebDrvAstn<GeckoDriver>,
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> u8 {
     let mut rl = DefaultEditor::new().unwrap();
@@ -176,7 +176,9 @@ fn enter_i_mode(
                 match line.as_str() {
                     #[cfg(feature = "gtrans")]
                     "gtrans" => {
-                        if let Err(_err_imode) = gtrans_i_mode(mafad, mafa_in, Arc::clone(&ntf)) {
+                        if let Err(_err_imode) =
+                            gtrans_i_mode(mafad, mafa_in, wda_inst, Arc::clone(&ntf))
+                        {
                             return 4;
                         } else {
                             continue;
@@ -254,168 +256,171 @@ fn enter_i_mode(
 fn gtrans_i_mode(
     mafad: &MafaData,
     mafa_in: &MafaInput,
-    // wda_inst: WebDrvAstn<GeckoDriver>,
+    wda_inst: &WebDrvAstn<GeckoDriver>,
     ntf: Arc<Mutex<EventNotifier>>,
 ) -> Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
-    let mut ag: Option<MafaClient<GtransInput, mafa::gtrans::Upath>> = None;
+    // let mut ag: Option<MafaClient<GtransInput, mafa::gtrans::Upath>> = None;
+    // let mut client = MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
 
-    // WIP
+    loop {
+        let readline = rl.readline("[mafa/gtrans]>> ");
+        match readline {
+            Ok(line) => {
+                let _ = rl.add_history_entry(line.as_str());
 
-    // loop {
-    //     let readline = rl.readline("[mafa/gtrans]>> ");
-    //     match readline {
-    //         Ok(line) => {
-    //             let _ = rl.add_history_entry(line.as_str());
+                if line.as_str() == "clear" {
+                    rl.clear_screen().expect("buggy");
+                    continue;
+                }
 
-    //             if line.as_str() == "clear" {
-    //                 rl.clear_screen().expect("buggy");
-    //                 continue;
-    //             }
+                let splits = line.split_whitespace();
+                let mut args = Vec::<&str>::new();
+                args.push("gtrans");
+                for split in splits {
+                    args.push(split);
+                }
 
-    //             let splits = line.split_whitespace();
-    //             let mut args = Vec::<&str>::new();
-    //             args.push("gtrans");
-    //             for split in splits {
-    //                 args.push(split);
-    //             }
+                let gtrans_in = GtransInput::from_i_mode2(args);
 
-    //             let gtrans_in = GtransInput::from_i_mode2(args);
+                match gtrans_in {
+                    Ok(_) => {}
+                    Err(err_in) => match err_in {
+                        MafaError::InvalidTimeoutPageLoad
+                        | MafaError::InvalidTimeoutScript
+                        | MafaError::InvalidSocks5Proxy
+                        | MafaError::InvalidSourceLang
+                        | MafaError::InvalidTargetLang
+                        | MafaError::ClapMatchError(_) => {
+                            lock_or_err!(ntf).notify(MafaEvent::FatalMafaError {
+                                cate: Category::Gtrans,
+                                err: err_in,
+                            });
 
-    //             match gtrans_in {
-    //                 Ok(_) => {}
-    //                 Err(err_in) => match err_in {
-    //                     MafaError::InvalidTimeoutPageLoad
-    //                     | MafaError::InvalidTimeoutScript
-    //                     | MafaError::InvalidSocks5Proxy
-    //                     | MafaError::InvalidSourceLang
-    //                     | MafaError::InvalidTargetLang
-    //                     | MafaError::ClapMatchError(_) => {
-    //                         lock_or_err!(ntf).notify(MafaEvent::FatalMafaError {
-    //                             cate: Category::Gtrans,
-    //                             err: err_in,
-    //                         });
+                            continue;
+                        }
 
-    //                         continue;
-    //                     }
+                        _ => {
+                            lock_or_err!(ntf).notify(MafaEvent::HandlerMissed {
+                                cate: Category::Gtrans,
+                                err: err_in,
+                            });
 
-    //                     _ => {
-    //                         lock_or_err!(ntf).notify(MafaEvent::HandlerMissed {
-    //                             cate: Category::Gtrans,
-    //                             err: err_in,
-    //                         });
+                            continue;
+                        }
+                    },
+                }
 
-    //                         continue;
-    //                     }
-    //                 },
-    //             }
+                let gtrans_in = gtrans_in.expect("buggy");
 
-    //             let gtrans_in = gtrans_in.expect("buggy");
+                // if !mafa_in.silent {
+                //     if gtrans_in.is_silent() {
+                //         lock_or_err!(ntf).set_silent();
+                //     } else {
+                //         lock_or_err!(ntf).set_nsilent();
+                //     }
+                // }
 
-    //             // if !mafa_in.silent {
-    //             //     if gtrans_in.is_silent() {
-    //             //         lock_or_err!(ntf).set_silent();
-    //             //     } else {
-    //             //         lock_or_err!(ntf).set_nsilent();
-    //             //     }
-    //             // }
+                // not bound by mafa_in
+                // if gtrans_in.is_nocolor() {
+                //     lock_or_err!(ntf).set_nocolor();
+                // } else {
+                //     lock_or_err!(ntf).set_color();
+                // }
 
-    //             // not bound by mafa_in
-    //             // if gtrans_in.is_nocolor() {
-    //             //     lock_or_err!(ntf).set_nocolor();
-    //             // } else {
-    //             //     lock_or_err!(ntf).set_color();
-    //             // }
+                // list lang
+                // if gtrans_in.is_list_lang() {
+                //     lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
+                //         cate: Category::Gtrans,
+                //         kind: EurKind::GtransAllLang,
+                //         output: GtransClient::list_all_lang().into(),
+                //     });
+                //     continue;
+                // }
 
-    //             // list lang
-    //             // if gtrans_in.is_list_lang() {
-    //             //     lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
-    //             //         cate: Category::Gtrans,
-    //             //         kind: EurKind::GtransAllLang,
-    //             //         output: GtransClient::list_all_lang().into(),
-    //             //     });
-    //             //     continue;
-    //             // }
+                // if ag.is_none()
+                // // || ag.as_ref().unwrap().need_reprepare(&gtrans_in)
+                // {
+                //     // if ag.is_some() {
+                //     //     dbgmsg!("reprepare ag");
+                //     //     let _old_ag = ag.take(); // release wda locks
+                //     //     dbgg!(_old_ag);
+                //     // }
 
-    //             if ag.is_none()
-    //             // || ag.as_ref().unwrap().need_reprepare(&gtrans_in)
-    //             {
-    //                 // if ag.is_some() {
-    //                 //     dbgmsg!("reprepare ag");
-    //                 //     let _old_ag = ag.take(); // release wda locks
-    //                 //     dbgg!(_old_ag);
-    //                 // }
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Gtrans,
+                //         is_fin: false,
+                //     });
+                //     ag = Some(MafaClient::new(
+                //         mafad,
+                //         Arc::clone(&ntf),
+                //         mafa_in,
+                //         gtrans_in,
+                //         wda_inst,
+                //     ));
+                //     lock_or_err!(ntf).notify(MafaEvent::Initialize {
+                //         cate: Category::Gtrans,
+                //         is_fin: true,
+                //     });
+                // }
 
-    //                 lock_or_err!(ntf).notify(MafaEvent::Initialize {
-    //                     cate: Category::Gtrans,
-    //                     is_fin: false,
-    //                 });
-    //                 ag = Some(MafaClient::new(
-    //                     mafad,
-    //                     Arc::clone(&ntf),
-    //                     mafa_in,
-    //                     gtrans_in,
-    //                     wda_inst,
-    //                 ));
-    //                 lock_or_err!(ntf).notify(MafaEvent::Initialize {
-    //                     cate: Category::Gtrans,
-    //                     is_fin: true,
-    //                 });
-    //             }
+                // let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
 
-    //             let ag = ag.as_mut().ok_or(MafaError::BugFound(6789))?;
+                // FIXME: better outside the loop
+                let mut client =
+                    MafaClient::new(mafad, Arc::clone(&ntf), mafa_in, gtrans_in, wda_inst);
 
-    //             match ag.handle(None) {
-    //                 Ok((eurk, ret)) => {
-    //                     lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
-    //                         cate: Category::Gtrans,
-    //                         kind: eurk,
-    //                         output: ret,
-    //                     });
-    //                     // if ag.is_elap_req() {
-    //                     //     lock_or_err!(ntf).elap(Category::Gtrans);
-    //                     // }
+                match client.handle(None) {
+                    Ok((eurk, ret)) => {
+                        lock_or_err!(ntf).notify(MafaEvent::ExactUserRequest {
+                            cate: Category::Gtrans,
+                            kind: eurk,
+                            output: ret,
+                        });
+                        // if ag.is_elap_req() {
+                        //     lock_or_err!(ntf).elap(Category::Gtrans);
+                        // }
 
-    //                     // return 0;
-    //                     continue;
-    //                 }
+                        // return 0;
+                        continue;
+                    }
 
-    //                 Err(err_hdl) => match err_hdl {
-    //                     MafaError::AllCachesInvalid
-    //                     | MafaError::DataFetchedNotReachable
-    //                     | MafaError::WebDrvCmdRejected(_, _)
-    //                     | MafaError::UnexpectedWda(_)
-    //                     | MafaError::CacheRebuildFail(_) => {
-    //                         lock_or_err!(ntf).notify(MafaEvent::FatalMafaError {
-    //                             cate: Category::Gtrans,
-    //                             err: err_hdl,
-    //                         });
+                    Err(err_hdl) => match err_hdl {
+                        MafaError::AllCachesInvalid
+                        | MafaError::DataFetchedNotReachable
+                        | MafaError::WebDrvCmdRejected(_, _)
+                        | MafaError::UnexpectedWda(_)
+                        | MafaError::CacheRebuildFail(_) => {
+                            lock_or_err!(ntf).notify(MafaEvent::FatalMafaError {
+                                cate: Category::Gtrans,
+                                err: err_hdl,
+                            });
 
-    //                         // return 3;
-    //                         continue;
-    //                     }
+                            // return 3;
+                            continue;
+                        }
 
-    //                     _ => {
-    //                         lock_or_err!(ntf).notify(MafaEvent::HandlerMissed {
-    //                             cate: Category::Gtrans,
-    //                             err: err_hdl,
-    //                         });
+                        _ => {
+                            lock_or_err!(ntf).notify(MafaEvent::HandlerMissed {
+                                cate: Category::Gtrans,
+                                err: err_hdl,
+                            });
 
-    //                         // return 3;
-    //                         continue;
-    //                     }
-    //                 },
-    //             }
-    //         }
-    //         Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
-    //             break;
-    //         }
-    //         Err(_rl_err) => {
-    //             dbgg!(_rl_err);
-    //             break;
-    //         }
-    //     }
-    // }
+                            // return 3;
+                            continue;
+                        }
+                    },
+                }
+            }
+            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
+                break;
+            }
+            Err(_rl_err) => {
+                dbgg!(_rl_err);
+                break;
+            }
+        }
+    }
 
     Ok(())
 }
