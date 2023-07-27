@@ -332,9 +332,10 @@ fn gtrans_i_mode(
                             kind: eurk,
                             output: ret,
                         });
-                        // if ag.is_elap_req() {
-                        //     lock_or_err!(ntf).elap(Category::Gtrans);
-                        // }
+
+                        if mafa_in.elap {
+                            lock_or_err!(ntf).elap(Category::Gtrans);
+                        }
 
                         // return 0;
                         continue;
@@ -454,9 +455,10 @@ fn twtl_i_mode(
                             kind: ewrk,
                             output: ret,
                         });
-                        // if ag.is_elap_req() {
-                        //     lock_or_err!(ntf).elap(Category::Twtl);
-                        // }
+
+                        if mafa_in.elap {
+                            lock_or_err!(ntf).elap(Category::Twtl);
+                        }
 
                         // return Ok(());
                         continue;
@@ -580,9 +582,9 @@ fn camd_i_mode(
                             output: ret,
                         });
 
-                        // if ag.is_elap_req() {
-                        //     lock_or_err!(ntf).elap(Category::Camd);
-                        // }
+                        if mafa_in.elap {
+                            lock_or_err!(ntf).elap(Category::Camd);
+                        }
 
                         // return 0;
                         continue;
@@ -674,10 +676,9 @@ fn workflow_gtrans(
                 output: ret,
             });
 
-            // FIXME: move to mafa
-            // if client.is_elap_req() {
-            // lock_or_rtn!(ntf).elap(Category::Gtrans);
-            // }
+            if mafa_in.elap {
+                lock_or_rtn!(ntf).elap(Category::Gtrans);
+            }
 
             return 0;
         }
@@ -752,9 +753,9 @@ fn workflow_twtl(
                 output: ret,
             });
 
-            // if ag.is_elap_req() {
-            //     lock_or_rtn!(ntf).elap(Category::Twtl);
-            // }
+            if mafa_in.elap {
+                lock_or_rtn!(ntf).elap(Category::Twtl);
+            }
 
             return 0;
         }
@@ -833,9 +834,9 @@ fn workflow_camd(
                 output: ret,
             });
 
-            // if ag.is_elap_req() {
-            //     lock_or_rtn!(ntf).elap(Category::Camd);
-            // }
+            if mafa_in.elap {
+                lock_or_rtn!(ntf).elap(Category::Camd);
+            }
 
             return 0;
         }

@@ -51,19 +51,6 @@ pub struct GtransInput {
     pub(crate) list_lang: bool,
     src_lang: String,
     tgt_lang: String,
-    cachm: CacheMechanism,
-    elap: bool,
-    ascii: bool,
-    wrap_width: u16,
-    // below are optional ones, bc mafa would provide these fields anyway;
-    // once specified in gtrans, mafa's corresponding ones shall be ignored
-    // silent: Option<bool>,
-    // nocolor: Option<bool>,
-    // webdrv
-    // tout_page_load: Option<u32>,
-    // tout_script: Option<u32>,
-    // socks5: Option<String>,
-    // gui: Option<bool>,
 }
 
 impl GtransInput {
@@ -104,28 +91,6 @@ impl GtransInput {
                 return Err(MafaError::InvalidTargetLang);
             }
             gtrans_in.tgt_lang = optval.clone();
-        }
-
-        // cachm
-        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::CacheMech::id()) {
-            gtrans_in.cachm = CacheMechanism::from_str(optval);
-        }
-
-        // elap
-        if ca_matched.get_flag(opts::Elapsed::id()) {
-            gtrans_in.elap = true;
-        }
-
-        // ascii
-        if ca_matched.get_flag(opts::AsciiMode::id()) {
-            gtrans_in.ascii = true;
-        }
-
-        // wrap-width
-        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::WrapWidth::id()) {
-            let intval =
-                u16::from_str_radix(&optval, 10).map_err(|_| MafaError::InvalidWrapWidth)?;
-            gtrans_in.wrap_width = intval;
         }
 
         dbgg!(&gtrans_in);
@@ -333,76 +298,6 @@ LOCAL instructs mafa to use local cache, typically located in mafa's dedicated c
         }
     }
 
-    pub struct Elapsed;
-    impl Elapsed {
-        #[inline]
-        pub fn id() -> &'static str {
-            "ELAPSED"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "elap"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Report the time cost in major phases"
-        }
-    }
-
-    pub struct AsciiMode;
-    impl AsciiMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "ASCIIMODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "ascii"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Use classical ASCII style"
-        }
-    }
-
-    pub struct WrapWidth;
-    impl WrapWidth {
-        #[inline]
-        pub fn id() -> &'static str {
-            "WRAPWIDTH"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "wrap-width"
-        }
-        #[inline]
-        pub fn def_val() -> &'static str {
-            "80"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Wrap width for translation result"
-        }
-        #[inline]
-        pub fn long_helper() -> String {
-            let bf = r#"Wrap width for translation result
-
-NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
-            let mut af_buf = [0u8; 128];
-
-            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
-                .unwrap()
-                .wrap()
-                .unwrap();
-
-            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
-        }
-    }
-
     pub struct SilentMode;
     impl SilentMode {
         #[inline]
@@ -416,22 +311,6 @@ NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
         #[inline]
         pub fn helper() -> &'static str {
             "Enable silent mode                                              "
-        }
-    }
-
-    pub struct NoColorMode;
-    impl NoColorMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "NOCOLOR_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "nocolor"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Print without color"
         }
     }
 
@@ -550,50 +429,8 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
-    let opt_ascii = {
-        type O = opts::AsciiMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_wrapwidth = {
-        type O = opts::WrapWidth;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .default_value(O::def_val())
-            .help(O::helper())
-            .long_help(O::long_helper())
-    };
-
-    let opt_cachemech = {
-        type O = opts::CacheMech;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .default_value(O::def_val())
-            .help(O::helper())
-            .long_help(O::long_helper())
-    };
-
-    let opt_elapsed = {
-        type O = opts::Elapsed;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
     let opt_silient = {
         type O = opts::SilentMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_nocolor = {
-        type O = opts::NoColorMode;
         ClapArg::new(O::id())
             .long(O::longopt())
             .action(ClapArgAction::SetTrue)
@@ -638,12 +475,7 @@ pub fn get_cmd() -> ClapCommand {
         .arg(opt_list_lang)
         .arg(opt_tl)
         .arg(opt_sl)
-        .arg(opt_ascii)
-        .arg(opt_wrapwidth)
-        .arg(opt_cachemech)
-        .arg(opt_elapsed)
         .arg(opt_silient)
-        .arg(opt_nocolor)
         .arg(opt_gui)
         .arg(opt_socks5)
         .arg(opt_tout_pageload)
@@ -734,11 +566,7 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, GtransInput, Upath> {
 
         Ok((
             EurKind::GtransResult,
-            gtrans_res.pretty_print(
-                self.input.nocolor,
-                self.sub_input.ascii,
-                self.sub_input.wrap_width,
-            )?,
+            gtrans_res.pretty_print(self.input.nocolor, self.input.ascii, self.input.wrap_width)?,
         ))
     }
 
@@ -950,18 +778,18 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, GtransInput, Upath> {
     fn try_rebuild_cache(&mut self) -> Result<()> {
         let mut rebuild_cache = false;
 
-        if let CacheMechanism::Remote = self.sub_input.cachm {
+        if let CacheMechanism::Remote = self.input.cachm {
             let remote_data = self.cache_on_gh(
                 "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/gtrans",
             )?;
 
             self.mafad.init_cache("gtrans", &remote_data)?;
-        } else if let CacheMechanism::Local = self.sub_input.cachm {
+        } else if let CacheMechanism::Local = self.input.cachm {
             self.mafad.try_init_cache(
                 "gtrans",
                 "[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n-",
             )?;
-        } else if let CacheMechanism::No = self.sub_input.cachm {
+        } else if let CacheMechanism::No = self.input.cachm {
             rebuild_cache = true;
         }
 

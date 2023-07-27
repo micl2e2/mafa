@@ -34,6 +34,8 @@ use ev_ntf::EventNotifier;
 
 #[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
 mod comm;
+#[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
+use comm::CacheMechanism;
 
 #[cfg(feature = "twtl")]
 pub mod twtl;
@@ -48,12 +50,16 @@ pub mod camd;
 pub struct MafaInput {
     pub silent: bool,
     pub nocolor: bool,
+    pub ascii: bool,
+    pub wrap_width: u16,
+    pub wrap_may_break: bool,
     pub tout_page_load: u32,
     pub tout_script: u32,
     pub socks5: String,
     pub gui: bool,
     pub list_profile: bool,
-    // TODO20230727: add ascii,elapsed,cachm
+    cachm: CacheMechanism,
+    pub elap: bool,
 }
 
 impl MafaInput {
@@ -68,6 +74,23 @@ impl MafaInput {
         // nocolor
         if ca_matched.get_flag(opts::NoColorMode::id()) {
             mafa_in.nocolor = true;
+        }
+
+        // ascii
+        if ca_matched.get_flag(opts::AsciiMode::id()) {
+            mafa_in.ascii = true;
+        }
+
+        // wrap-width
+        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::WrapWidth::id()) {
+            let intval =
+                u16::from_str_radix(&optval, 10).map_err(|_| MafaError::InvalidWrapWidth)?;
+            mafa_in.wrap_width = intval;
+        }
+
+        // wrap-may-break
+        if ca_matched.get_flag(opts::WrapMayBreak::id()) {
+            mafa_in.wrap_may_break = true;
         }
 
         // page load timeout
@@ -96,6 +119,16 @@ impl MafaInput {
         // gui
         if ca_matched.get_flag(opts::GuiMode::id()) {
             mafa_in.gui = true;
+        }
+
+        // elap
+        if ca_matched.get_flag(opts::Elapsed::id()) {
+            mafa_in.elap = true;
+        }
+
+        // cachm
+        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::CacheMech::id()) {
+            mafa_in.cachm = CacheMechanism::from_str(optval);
         }
 
         // list profile
@@ -134,9 +167,7 @@ pub mod opts {
         pub fn long_helper() -> String {
             let bf = "Enable silent mode
 
-Any insignificant information redirected to STDOUT will be hidden.
-
-NOTE: subcommands can override this option if this one is not specified.";
+Any insignificant information redirected to STDOUT will be hidden.";
 
             let mut af_buf = [0u8; 256];
 
@@ -167,11 +198,97 @@ NOTE: subcommands can override this option if this one is not specified.";
         pub fn long_helper() -> String {
             let bf = "Print without color
 
-Any information will be printed without using ANSI escape codes
-
-NOTE: subcommands can override this option if this one is not specified.";
+Any information will be printed without using ANSI escape codes.";
 
             let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct AsciiMode;
+    impl AsciiMode {
+        #[inline]
+        pub fn id() -> &'static str {
+            "ASCIIMODE"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "ascii"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Use classical ASCII style"
+        }
+    }
+
+    pub struct WrapWidth;
+    impl WrapWidth {
+        #[inline]
+        pub fn id() -> &'static str {
+            "WRAPWIDTH"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "wrap-width"
+        }
+        #[inline]
+        pub fn def_val() -> &'static str {
+            "80"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Wrap output with width limit"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Wrap output with width limit
+
+NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
+            let mut af_buf = [0u8; 128];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct WrapMayBreak;
+    impl WrapMayBreak {
+        #[inline]
+        pub fn id() -> &'static str {
+            "WRAPMAYBREAK"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "wrap-may-break"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Wrap output in MayBreak style"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Wrap output in MayBreak style
+
+Default is "NoBreak" style. This change the style to "MayBreak".
+
+NOTE: This is a hint option, components may ignore it.
+
+NOTE: "NoBreak" suits for languages that rely on ASCII SPACE to delimit words. "MayBreak" suits for otherwise languages. See more details in Bwrap documentation: https://docs.rs/bwrap/latest/bwrap/enum.WrapStyle.html."#;
+            let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
                 .unwrap()
@@ -202,9 +319,7 @@ NOTE: subcommands can override this option if this one is not specified.";
 
 Run the underlying web browser in GUI mode.
 
-USED WITH CAUTION: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness.
-
-NOTE: subcommands can override this option.";
+USED WITH CAUTION: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness.";
 
             let mut af_buf = [0u8; 256];
 
@@ -270,9 +385,7 @@ Note that....";
         pub fn long_helper() -> String {
             let bf = "Fetch with SOCKS5 proxy
 
-The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries at first initialization.
-
-NOTE: subcommands can override this option.";
+The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries at first initialization.";
 
             let mut af_buf = [0u8; 256];
 
@@ -311,9 +424,7 @@ NOTE: subcommands can override this option.";
         pub fn long_helper() -> String {
             let bf = "Timeout for page loading(ms)
 
-The default timeout for loading web page(i.e., opening a website). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
-
-NOTE: subcommands can override this option.";
+The default timeout for loading web page(i.e., opening a website). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -351,9 +462,7 @@ NOTE: subcommands can override this option.";
         pub fn long_helper() -> String {
             let bf = "Timeout for script evaluation(ms)
 
-The default timeout for script evaluation(i.e., evaluating JavaScript synchronously or asynchronously). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
-
-NOTE: subcommands can override this option.";
+The default timeout for script evaluation(i.e., evaluating JavaScript synchronously or asynchronously). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -362,6 +471,62 @@ NOTE: subcommands can override this option.";
                 .unwrap();
 
             String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct CacheMech;
+    impl CacheMech {
+        #[inline]
+        pub fn id() -> &'static str {
+            "CACHE_MECHNISM"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "cache"
+        }
+        #[inline]
+        pub fn def_val() -> &'static str {
+            "LOCAL"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "The caching mechanism"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"The caching mechanism
+
+Available values are: LOCAL, REMOTE, NO.
+
+LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored on the internet and can be readily accessed and fetched, note that this option will override the corresponding cache; NO instructs mafa to build cache freshly, this usually needs more time, compared to other mechanisms."#;
+            let mut af_buf = [0u8; 512];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct Elapsed;
+    impl Elapsed {
+        #[inline]
+        pub fn id() -> &'static str {
+            "ELAPSED"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "elap"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Report the time cost in major phases"
         }
     }
 }
@@ -378,6 +543,32 @@ pub fn get_cmd() -> ClapCommand {
 
     let opt_nocolor = {
         type O = opts::NoColorMode;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_ascii = {
+        type O = opts::AsciiMode;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+    };
+
+    let opt_wrapwidth = {
+        type O = opts::WrapWidth;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .default_value(O::def_val())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_wrapmaybreak = {
+        type O = opts::WrapMayBreak;
         ClapArg::new(O::id())
             .long(O::longopt())
             .action(ClapArgAction::SetTrue)
@@ -421,6 +612,23 @@ pub fn get_cmd() -> ClapCommand {
             .default_value(O::def_val())
             .help(O::helper())
             .long_help(O::long_helper())
+    };
+
+    let opt_cachm = {
+        type O = opts::CacheMech;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .default_value(O::def_val())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_elapsed = {
+        type O = opts::Elapsed;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
     };
 
     let opt_list_profile = {
@@ -495,10 +703,15 @@ ones under normal mode, i.e., -h for short help, --help for long help.
     let cmd_mafa = cmd_mafa
         .arg(opt_silient)
         .arg(opt_nocolor)
+        .arg(opt_ascii)
+        .arg(opt_wrapwidth)
+        .arg(opt_wrapmaybreak)
         .arg(opt_gui)
         .arg(opt_socks5)
         .arg(opt_tout_pageload)
         .arg(opt_tout_script)
+        .arg(opt_cachm)
+        .arg(opt_elapsed)
         .arg(opt_list_profile);
 
     cmd_mafa

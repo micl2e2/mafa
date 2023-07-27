@@ -63,26 +63,12 @@ impl SaveFormat {
 
 #[derive(Debug, Default)]
 pub struct TwtlInput {
-    imode: bool,
+    imode: bool, // no from clap
     username: String,
     ntweets: u16,
-    wrap_width: u16,
-    wrap_may_break: bool,
     save_to: Option<PathBuf>,
     save_format: Option<SaveFormat>,
-    ascii: bool,
     try_login: bool,
-    elap: bool,
-    cachm: CacheMechanism,
-    // below are optional ones, bc mafa would provide these fields anyway;
-    // once specified in gtrans, mafa's corresponding ones shall be ignored
-    // silent: Option<bool>,  // some means true, none means false
-    // nocolor: Option<bool>, // some means true, none means false
-    // webdrv
-    // tout_page_load: Option<u32>,
-    // tout_script: Option<u32>,
-    // socks5: Option<String>,
-    // gui: Option<bool>, // some not means true
 }
 
 impl TwtlInput {
@@ -104,18 +90,6 @@ impl TwtlInput {
             twtl_in.ntweets = intval;
         }
 
-        // wrap-width
-        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::WrapWidth::id()) {
-            let intval =
-                u16::from_str_radix(&optval, 10).map_err(|_| MafaError::InvalidWrapWidth)?;
-            twtl_in.wrap_width = intval;
-        }
-
-        // wrap-may-break
-        if ca_matched.get_flag(opts::WrapMayBreak::id()) {
-            twtl_in.wrap_may_break = true;
-        }
-
         // save-format
         if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::SaveFormat::id()) {
             twtl_in.save_format = Some(SaveFormat::from_str(optval));
@@ -124,21 +98,6 @@ impl TwtlInput {
         // save-to
         if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::SaveTo::id()) {
             twtl_in.save_to = Some(ensure_save_to(optval, twtl_in.save_format)?);
-        }
-
-        // cache
-        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::CacheMech::id()) {
-            twtl_in.cachm = CacheMechanism::from_str(optval);
-        }
-
-        // elapsed
-        if ca_matched.get_flag(opts::Elapsed::id()) {
-            twtl_in.elap = true;
-        }
-
-        // ascii
-        if ca_matched.get_flag(opts::AsciiMode::id()) {
-            twtl_in.ascii = true;
         }
 
         // login
@@ -206,49 +165,6 @@ For example, the valid usernames for Twitter official account are: `@twitter`, `
         }
     }
 
-    pub struct CacheMech;
-    impl CacheMech {
-        #[inline]
-        pub fn id() -> &'static str {
-            "CACHE_MECHNISM"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "cache"
-        }
-        #[inline]
-        pub fn def_val() -> &'static str {
-            "LOCAL"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "The caching mechanism"
-        }
-        #[inline]
-        pub fn long_helper() -> String {
-            let bf = r#"The caching mechanism
-
-Available values are: LOCAL, REMOTE, NO.
-
-LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored on the internet and can be readily accessed and fetched, note that this option will override the local cache; NO instructs mafa to build cache freshly, this usually needs more time, compared to other mechanisms.
-
-Performance : LOCAL > REMOTE > NO
-Stability   :    NO > REMOTE > LOCAL"#;
-            let mut af_buf = [0u8; 512];
-
-            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
-                .unwrap()
-                .wrap()
-                .unwrap();
-
-            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
-        }
-    }
-
     pub struct NumTweets;
     impl NumTweets {
         #[inline]
@@ -282,62 +198,6 @@ Stability   :    NO > REMOTE > LOCAL"#;
 ATTENTION: The maximum is 800. Due to restricted environment of Twitter website, any value larger than 800 will fallback to 800, and this value will likely change in the future.";
 
             let mut af_buf = [0u8; 256];
-
-            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
-                .unwrap()
-                .wrap()
-                .unwrap();
-
-            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
-        }
-    }
-
-    pub struct WrapWidth;
-    impl WrapWidth {
-        #[inline]
-        pub fn id() -> &'static str {
-            "WRAPWIDTH"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "wrap-width"
-        }
-        #[inline]
-        pub fn def_val() -> &'static str {
-            "80"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Wrap tweets with maximum width"
-        }
-    }
-
-    pub struct WrapMayBreak;
-    impl WrapMayBreak {
-        #[inline]
-        pub fn id() -> &'static str {
-            "WRAPMAYBREAK"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "wrap-may-break"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Wrap tweets in MayBreak style"
-        }
-        #[inline]
-        pub fn long_helper() -> String {
-            let bf = r#"Wrap tweets in MayBreak style
-
-Default is NoBreak style.
-
-NoBreak is suitable for languages that rely on ASCII SPACE to delimit words, such as English, French, German, etc. MayBreak is suitable for languages that does not rely on ASCII SPACE, such as Arabic, Chinese, Japanese, etc."#;
-            let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
                 .unwrap()
@@ -414,22 +274,6 @@ Available values are: json, xml."#
         }
     }
 
-    pub struct AsciiMode;
-    impl AsciiMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "ASCIIMODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "ascii"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Use classical ASCII style"
-        }
-    }
-
     pub struct TryLogin;
     impl TryLogin {
         #[inline]
@@ -446,22 +290,6 @@ Available values are: json, xml."#
         }
     }
 
-    pub struct Elapsed;
-    impl Elapsed {
-        #[inline]
-        pub fn id() -> &'static str {
-            "ELAPSED"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "elap"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Report the time cost in major phases"
-        }
-    }
-
     pub struct SilentMode;
     impl SilentMode {
         #[inline]
@@ -475,22 +303,6 @@ Available values are: json, xml."#
         #[inline]
         pub fn helper() -> &'static str {
             "Enable silent mode                                      "
-        }
-    }
-
-    pub struct NoColorMode;
-    impl NoColorMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "NOCOLOR_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "nocolor"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Print without color"
         }
     }
 
@@ -591,23 +403,6 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
-    let opt_wrapwidth = {
-        type O = opts::WrapWidth;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .default_value(O::def_val())
-            .help(O::helper())
-    };
-
-    let opt_wrapmaybreak = {
-        type O = opts::WrapMayBreak;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-            .long_help(O::long_helper())
-    };
-
     let opt_saveto = {
         type O = opts::SaveTo;
         ClapArg::new(O::id())
@@ -625,14 +420,6 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
-    let opt_ascii = {
-        type O = opts::AsciiMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
     let opt_trylogin = {
         type O = opts::TryLogin;
         ClapArg::new(O::id())
@@ -641,33 +428,8 @@ pub fn get_cmd() -> ClapCommand {
             .help(O::helper())
     };
 
-    let opt_cachemech = {
-        type O = opts::CacheMech;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .default_value(O::def_val())
-            .help(O::helper())
-            .long_help(O::long_helper())
-    };
-
-    let opt_elapsed = {
-        type O = opts::Elapsed;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
     let opt_silient = {
         type O = opts::SilentMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_nocolor = {
-        type O = opts::NoColorMode;
         ClapArg::new(O::id())
             .long(O::longopt())
             .action(ClapArgAction::SetTrue)
@@ -710,15 +472,9 @@ pub fn get_cmd() -> ClapCommand {
         .about("Query Twitter users' timeline")
         .arg(opt_username)
         .arg(opt_ntweets)
-        .arg(opt_wrapwidth)
-        .arg(opt_wrapmaybreak)
         .arg(opt_saveto)
         .arg(opt_saveformat)
-        .arg(opt_cachemech)
-        .arg(opt_elapsed)
         .arg(opt_silient)
-        .arg(opt_nocolor)
-        .arg(opt_ascii)
         .arg(opt_trylogin)
         .arg(opt_gui)
         .arg(opt_socks5)
@@ -941,19 +697,19 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
     fn try_rebuild_cache(&mut self) -> Result<()> {
         let mut rebuild_cache = false;
 
-        if let CacheMechanism::Remote = self.sub_input.cachm {
+        if let CacheMechanism::Remote = self.input.cachm {
             let remote_data = self.cache_on_gh(
                 "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/twtl",
             )?;
 
             self.mafad.init_cache("twtl", &remote_data)?;
-        } else if let CacheMechanism::Local = self.sub_input.cachm {
+        } else if let CacheMechanism::Local = self.input.cachm {
             self.mafad.try_init_cache(
                 "twtl",
                 "[[2,0,0,2,3,0,0,0,0,0,2,0,0,2,1,0,0,0],[0,0,0,0,0,1,1,1]]\n[[2,0,0,1,3,0,0,0,0,0,2,0,0,2,1,0,0,0],[0,0,0,0,0,1,1,1]]\n[[2,0,0,1,3,0,0,0,0,0,2,0,0,2,1,0],[0,0,0,0,0,1,1,1]]\n-",
             )?;
             // number of NL is the number of website changes
-        } else if let CacheMechanism::No = self.sub_input.cachm {
+        } else if let CacheMechanism::No = self.input.cachm {
             rebuild_cache = true;
         }
 
@@ -1038,9 +794,9 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
         })?;
 
         let nocolor = self.input.nocolor;
-        let asciiful = self.sub_input.ascii;
-        let wrap_width = self.sub_input.wrap_width;
-        let wrap_may_break = self.sub_input.wrap_may_break;
+        let asciiful = self.input.ascii;
+        let wrap_width = self.input.wrap_width;
+        let wrap_may_break = self.input.wrap_may_break;
 
         let mut twov_list = Vec::<TweetOverview>::new();
         let mut all_output = String::from("");
