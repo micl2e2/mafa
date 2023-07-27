@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Michael Lee <imichael2e2@proton.me/...@gmail.com>
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
 //
 // Licensed under the GNU General Public License, Version 3.0 or any later
 // version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.

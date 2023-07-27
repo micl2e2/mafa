@@ -1,3 +1,12 @@
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
+//
+// Licensed under the GNU General Public License, Version 3.0 or any later
+// version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
+//
+// This file may not be copied, modified, or distributed except in compliance
+// with the license.
+//
+
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 

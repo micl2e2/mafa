@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Michael Lee <imichael2e2@proton.me/...@gmail.com>
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
 //
 // Licensed under the GNU General Public License, Version 3.0 or any later
 // version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -698,9 +698,8 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
         let mut rebuild_cache = false;
 
         if let CacheMechanism::Remote = self.input.cachm {
-            let remote_data = self.cache_on_gh(
-                "https://raw.githubusercontent.com/imichael2e2/mafa-cache/master/twtl",
-            )?;
+            let remote_data = self
+                .cache_on_gh("https://raw.githubusercontent.com/micl2e2/mafa-cache/master/twtl")?;
 
             self.mafad.init_cache("twtl", &remote_data)?;
         } else if let CacheMechanism::Local = self.input.cachm {

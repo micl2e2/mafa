@@ -1,22 +1,22 @@
-- [A Small Demo](#orgace748e)
-- [Installation](#org13ecc82)
-  - [Prerequisite](#orgcb0debd)
-  - [Option 1: Cargo install (recommended)](#org9f8a121)
-  - [Option 2: Build from source](#org1d0f428)
-  - [Option 3: Prebuilt binaries](#org39a947c)
-- [Mafa is for me?](#org3fb3e15)
-- [What is Mafa](#org5bc93ec)
-  - [How Mafa works](#orgcfd390e)
-  - [Why Mafa](#org83531b1)
-  - [About Mafa](#orga8e5b26)
-- [Supported components <a id="org74267b7"></a>](#org9f7382d)
-  - [What about website "&#x2026;"?](#org913a8cb)
-- [Contributing](#orgf368118)
-- [License](#org296a2f8)
+- [A Small Demo](#org0000f19)
+- [Installation](#org1469fa3)
+  - [Prerequisite](#orgf7f146a)
+  - [Option 1: Cargo install (recommended)](#org6595cc4)
+  - [Option 2: Build from source](#org1c74f80)
+  - [Option 3: Prebuilt binaries](#org1823fbb)
+- [Mafa is for me?](#org59f3f7d)
+- [What is Mafa](#org7dc74d6)
+  - [How Mafa works](#org03e4f2a)
+  - [Why Mafa](#org92c417a)
+  - [About Mafa](#orga264bbf)
+- [Supported components <a id="orga63bc12"></a>](#org3eeea9c)
+  - [What about website "&#x2026;"?](#org19f59c4)
+- [Contributing](#org34cc472)
+- [License](#org09b7738)
 
 
 
-<a id="orgace748e"></a>
+<a id="org0000f19"></a>
 
 # A Small Demo
 
@@ -25,12 +25,12 @@
 <img src="demo.gif" alt="demo" width="500px"/>
 
 
-<a id="org13ecc82"></a>
+<a id="org1469fa3"></a>
 
 # Installation
 
 
-<a id="orgcb0debd"></a>
+<a id="orgf7f146a"></a>
 
 ## Prerequisite
 
@@ -45,7 +45,7 @@ Mafa does not work alone, below are programs that it depends on:
 4.  gzip (any version)
 
 
-<a id="org9f8a121"></a>
+<a id="org6595cc4"></a>
 
 ## Option 1: Cargo install (recommended)
 
@@ -61,13 +61,13 @@ mafa --version
 ```
 
 
-<a id="org1d0f428"></a>
+<a id="org1c74f80"></a>
 
 ## Option 2: Build from source
 
 ```bash
 # grab the source
-git clone https://github.com/imichael2e2/mafa
+git clone https://github.com/micl2e2/mafa
 
 # into source directory
 cd mafa
@@ -80,14 +80,14 @@ cargo build --release --features imode,twtl,gtrans
 ```
 
 
-<a id="org39a947c"></a>
+<a id="org1823fbb"></a>
 
 ## Option 3: Prebuilt binaries
 
-Check [releases](https://github.com/imichael2e2/mafa/releases).
+Check [releases](https://github.com/micl2e2/mafa/releases).
 
 
-<a id="org3fb3e15"></a>
+<a id="org59f3f7d"></a>
 
 # Mafa is for me?
 
@@ -102,23 +102,23 @@ However, Mafa is **NOT** for you if
 -   You plan to crawl a whole website and extract all its data. (A dedicated web crawler does a better job)
 
 
-<a id="org5bc93ec"></a>
+<a id="org7dc74d6"></a>
 
 # What is Mafa
 
 Mafa is a command-line tool that helps people interact with online websites in a terminal(tty). It accesses websites through *components*. Components are child programs that rely on [WebDriver](https://www.w3.org/TR/webdriver) to do their job. Each module has a fixed, predefined website url and has a specific task for that site. With components, users can browse websites without interacting with web browsers directly.
 
-Note that Mafa supports wbsites selectively rather than arbitrarily, the selected ones are listed in [below](#org74267b7).
+Note that Mafa supports wbsites selectively rather than arbitrarily, the selected ones are listed in [below](#orga63bc12).
 
 
-<a id="orgcfd390e"></a>
+<a id="org03e4f2a"></a>
 
 ## How Mafa works
 
 Mafa leverages [WebDriver](https://www.w3.org/TR/webdriver) to achieve its goals. More specifically, Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With WebDriver, Mafa can act like a human, browsing websites naturally for its user.
 
 
-<a id="org83531b1"></a>
+<a id="org92c417a"></a>
 
 ## Why Mafa
 
@@ -142,7 +142,7 @@ It is noteworthy that Mafa does not wipe out the user identity by default, as a 
 One of Mafa's goals is to handle websites stably for a relatively long period. Modern web pages are famous for their dynamic characteristic. However, Mafa can handle those dynamic and unpredictable web pages as effortlessly as the static ones.
 
 
-<a id="orga8e5b26"></a>
+<a id="orga264bbf"></a>
 
 ## About Mafa
 
@@ -153,9 +153,9 @@ Some websites provide their data *publicly* but do not publish corresponding API
 Mafa is the one who commits to protexting web users' freedom. It tries its best to achieve the initial goal: as long as the data is publicly accessible to all users without discrimination, the APIs to access it should be as well.
 
 
-<a id="org9f7382d"></a>
+<a id="org3eeea9c"></a>
 
-# Supported components <a id="org74267b7"></a>
+# Supported components <a id="orga63bc12"></a>
 
 -   TWTL: Query Twitter users' timeline.
 
@@ -166,7 +166,7 @@ Mafa is the one who commits to protexting web users' freedom. It tries its best 
 -   IMODE: Interactive mode.
 
 
-<a id="org913a8cb"></a>
+<a id="org19f59c4"></a>
 
 ## What about website "&#x2026;"?
 
@@ -176,14 +176,14 @@ Yes! Mafa is open in its heart. If your favorite websites are not listed here, y
 2.  The valuable data on it is in text form.
 
 
-<a id="orgf368118"></a>
+<a id="org34cc472"></a>
 
 # Contributing
 
 Mafa is still in early development, any contribution is welcomed!
 
 
-<a id="org296a2f8"></a>
+<a id="org09b7738"></a>
 
 # License
 

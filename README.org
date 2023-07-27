@@ -43,7 +43,7 @@ If you have Cargo installed, then you can
 
 #+begin_src bash
   # grab the source
-  git clone https://github.com/imichael2e2/mafa
+  git clone https://github.com/micl2e2/mafa
 
   # into source directory
   cd mafa
@@ -58,7 +58,7 @@ If you have Cargo installed, then you can
 
 ** Option 3: Prebuilt binaries
 
-Check [[https://github.com/imichael2e2/mafa/releases][releases]].
+Check [[https://github.com/micl2e2/mafa/releases][releases]].
 
 
 

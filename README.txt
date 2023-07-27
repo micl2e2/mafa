@@ -33,7 +33,7 @@ A Small Demo
 
   /(captured by [LICEcap])/
 
-  <./demo.gif>
+  <img src="demo.gif" alt="demo" width="500px"/>
 
 
 [LICEcap] <https://www.cockos.com/licecap/>
@@ -77,7 +77,7 @@ Option 2: Build from source
 
   ┌────
   │ # grab the source
-  │ git clone https://github.com/imichael2e2/mafa
+  │ git clone https://github.com/micl2e2/mafa
   │ 
   │ # into source directory
   │ cd mafa
@@ -96,7 +96,7 @@ Option 3: Prebuilt binaries
   Check [releases].
 
 
-[releases] <https://github.com/imichael2e2/mafa/releases>
+[releases] <https://github.com/micl2e2/mafa/releases>
 
 
 Mafa is for me?
