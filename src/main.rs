@@ -105,12 +105,25 @@ fn main() {
 
                     // needs alive wda
                     if mafa_in.list_profile {
+                        let list_got = format!(
+                            "------ Available Profiles ------
+{}
+--------------------------------",
+                            wda_inst
+                                .existing_profiles()
+                                .expect("bug")
+                                .iter()
+                                .map(|v| format!("<{v}>"))
+                                .collect::<Vec<String>>()
+                                .join("\n")
+                        );
+
                         ntf.lock()
                             .expect("buggy")
                             .notify(MafaEvent::ExactUserRequest {
                                 cate: Category::Mafa,
                                 kind: EurKind::ListProfile,
-                                output: wda_inst.existing_profiles().expect("bug").join(","),
+                                output: list_got,
                             });
 
                         ignore_subcmd = true;
