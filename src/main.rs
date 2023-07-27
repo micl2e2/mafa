@@ -8,6 +8,7 @@
 //
 
 use wda::GeckoDriver;
+use wda::WdaError;
 use wda::WebDrvAstn;
 
 use mafa::MafaClient;
@@ -66,75 +67,113 @@ fn main() {
                     ntf.lock().expect("bug").set_nocolor();
                 }
 
+                dbgg!(&mafa_in);
+
                 // init wda
                 ntf.lock().expect("bug").notify(MafaEvent::Initialize {
                     cate: Category::Mafa,
                     is_fin: false,
                 });
-                let wda_inst = mafa::init_wda(&mafa_in).expect("bug"); // FIXME: handle error
-                ntf.lock().expect("bug").notify(MafaEvent::Initialize {
-                    cate: Category::Mafa,
-                    is_fin: true,
-                });
+                let wda_inst = mafa::init_wda(&mafa_in);
 
-                // needs alive wda
-                if mafa_in.list_profile {
-                    ntf.lock()
-                        .expect("buggy")
-                        .notify(MafaEvent::ExactUserRequest {
-                            cate: Category::Mafa,
-                            kind: EurKind::ListProfile,
-                            output: wda_inst.existing_profiles().expect("bug").join(","),
-                        });
+                if let Err(e) = wda_inst {
+                    match e {
+                        MafaError::InvalidUseProfile | MafaError::UnexpectedWda(_) => {
+                            ntf.lock().expect("bug").notify(MafaEvent::FatalMafaError {
+                                cate: Category::Mafa,
+                                err: e,
+                            });
 
-                    ignore_subcmd = true;
-                    exit_code = 0;
-                }
-
-                // subcommand
-                if !ignore_subcmd {
-                    match matched.subcommand() {
-                        #[cfg(feature = "gtrans")]
-                        Some(("gtrans", sub_m)) => {
-                            let gtrans_in = GtransInput::from_ca_matched(sub_m);
-                            exit_code = workflow_gtrans(
-                                &mafad,
-                                &mafa_in,
-                                gtrans_in,
-                                &wda_inst,
-                                Arc::clone(&ntf),
-                            );
+                            exit_code = 7;
                         }
+                        _ => {
+                            ntf.lock().expect("bug").notify(MafaEvent::HandlerMissed {
+                                cate: Category::Mafa,
+                                err: e,
+                            });
 
-                        #[cfg(feature = "twtl")]
-                        Some(("twtl", sub_m)) => {
-                            let twtl_in = TwtlInput::from_ca_matched(sub_m);
-                            exit_code = workflow_twtl(
-                                &mafad,
-                                &mafa_in,
-                                twtl_in,
-                                &wda_inst,
-                                Arc::clone(&ntf),
-                            );
+                            exit_code = 7;
                         }
+                    }
+                } else {
+                    // finish things left
+                    let wda_inst = wda_inst.expect("bug");
+                    ntf.lock().expect("bug").notify(MafaEvent::Initialize {
+                        cate: Category::Mafa,
+                        is_fin: true,
+                    });
 
-                        #[cfg(feature = "camd")]
-                        Some(("camd", sub_m)) => {
-                            let camd_in = CamdInput::from_ca_matched(sub_m);
-                            exit_code = workflow_camd(
-                                &mafad,
-                                &mafa_in,
-                                camd_in,
-                                &wda_inst,
-                                Arc::clone(&ntf),
-                            );
-                        }
+                    // needs alive wda
+                    if mafa_in.list_profile {
+                        ntf.lock()
+                            .expect("buggy")
+                            .notify(MafaEvent::ExactUserRequest {
+                                cate: Category::Mafa,
+                                kind: EurKind::ListProfile,
+                                output: wda_inst.existing_profiles().expect("bug").join(","),
+                            });
 
-                        #[cfg(feature = "imode")]
-                        Some(("i", _)) => {
-                            exit_code = enter_i_mode(&mafad, &mafa_in, &wda_inst, Arc::clone(&ntf));
+                        ignore_subcmd = true;
+                        exit_code = 0;
+                    }
+
+                    // subcommand
+                    if !ignore_subcmd {
+                        match matched.subcommand() {
+                            #[cfg(feature = "gtrans")]
+                            Some(("gtrans", sub_m)) => {
+                                let gtrans_in = GtransInput::from_ca_matched(sub_m);
+                                exit_code = workflow_gtrans(
+                                    &mafad,
+                                    &mafa_in,
+                                    gtrans_in,
+                                    &wda_inst,
+                                    Arc::clone(&ntf),
+                                );
+                            }
+
+                            #[cfg(feature = "twtl")]
+                            Some(("twtl", sub_m)) => {
+                                let twtl_in = TwtlInput::from_ca_matched(sub_m);
+                                exit_code = workflow_twtl(
+                                    &mafad,
+                                    &mafa_in,
+                                    twtl_in,
+                                    &wda_inst,
+                                    Arc::clone(&ntf),
+                                );
+                            }
+
+                            #[cfg(feature = "camd")]
+                            Some(("camd", sub_m)) => {
+                                let camd_in = CamdInput::from_ca_matched(sub_m);
+                                exit_code = workflow_camd(
+                                    &mafad,
+                                    &mafa_in,
+                                    camd_in,
+                                    &wda_inst,
+                                    Arc::clone(&ntf),
+                                );
+                            }
+
+                            #[cfg(feature = "imode")]
+                            Some(("i", _)) => {
+                                exit_code =
+                                    enter_i_mode(&mafad, &mafa_in, &wda_inst, Arc::clone(&ntf));
+                            }
+
+                            _ => {
+                                ntf.lock()
+                                    .expect("buggy")
+                                    .notify(MafaEvent::ExactUserRequest {
+                                    cate: Category::Mafa,
+                                    kind: EurKind::NoSubCmd,
+                                    output:
+                                        "no components supplied. Please check supported components by -h or --help"
+                                            .into(),
+                                });
+                            }
                         }
-                        _ => {}
                     }
                 }
             }

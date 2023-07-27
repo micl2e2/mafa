@@ -98,6 +98,7 @@ pub enum MafaEvent {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EurKind {
+    NoSubCmd,
     ListProfile,
     ImodeHelper,
     TwtlResult,    /* twitter timeline result */
@@ -693,6 +694,22 @@ impl EventNotifier {
                         cate.as_str(),
                         err_wda
                     );
+                }
+
+                MafaError::InvalidUseProfile => {
+                    if !self.is_prev_final() {
+                        eprintln_not!(self.smode, "");
+                    }
+
+                    eprint_not!(
+                        self.smode,
+                        if self.color {
+                            "\u{1b}[31;1merror: \u{1b}[0m"
+                        } else {
+                            "error: "
+                        }
+                    );
+                    eprintln_not!(self.smode, "invalid profile id ({})", cate.as_str());
                 }
 
                 MafaError::CacheRebuildFail(fk) => {

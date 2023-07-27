@@ -29,6 +29,9 @@ pub enum MafaError {
     //
     WebDrvCmdRejected(String, String),
     UnexpectedWda(WdaError),
+    ///
+    /// corresponds to Wda InvalidBrowserProfileId error
+    InvalidUseProfile,
     CacheRebuildFail(CacheRebuildFailKind),
     CacheNotBuildable,
     AllCachesInvalid,

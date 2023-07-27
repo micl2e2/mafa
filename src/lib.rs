@@ -58,6 +58,7 @@ pub struct MafaInput {
     pub socks5: String,
     pub gui: bool,
     pub list_profile: bool,
+    pub use_profile: String,
     cachm: CacheMechanism,
     pub elap: bool,
 }
@@ -134,6 +135,11 @@ impl MafaInput {
         // list profile
         if ca_matched.get_flag(opts::ListProfile::id()) {
             mafa_in.list_profile = true;
+        }
+
+        // use profile
+        if let Ok(Some(val)) = ca_matched.try_get_one::<String>(opts::UseProfile::id()) {
+            mafa_in.use_profile = val.clone();
         }
 
         dbgg!(&mafa_in);
@@ -351,6 +357,48 @@ USED WITH CAUTION: when GUI mode is on, any user operation on web browser interf
             let bf = "List all existing browser profiles
 
 Note that....";
+
+            let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct UseProfile;
+    impl UseProfile {
+        #[inline]
+        pub fn id() -> &'static str {
+            "USE_PROFILE"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "profile"
+        }
+        #[inline]
+        pub fn shortopt() -> char {
+            'p'
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Use specific browser profile"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = "Use specific browser profile
+
+NOTE: the profile will be created if not existing.
+
+NOTE: the size of browser profiles is non-trivial, use with caution!
+";
 
             let mut af_buf = [0u8; 256];
 
@@ -640,6 +688,16 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
+    let opt_use_profile = {
+        type O = opts::UseProfile;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .short(O::shortopt())
+            .num_args(O::n_args())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
     static HELPER_TXT: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(|| {
         let mut s = format!("{}\ncomponents: ", clap::crate_version!());
         #[cfg(feature = "imode")]
@@ -712,7 +770,8 @@ ones under normal mode, i.e., -h for short help, --help for long help.
         .arg(opt_tout_script)
         .arg(opt_cachm)
         .arg(opt_elapsed)
-        .arg(opt_list_profile);
+        .arg(opt_list_profile)
+        .arg(opt_use_profile);
 
     cmd_mafa
 }
@@ -751,10 +810,12 @@ impl<'a, 'b, 'c, I, C: Default> MafaClient<'a, 'b, 'c, I, C> {
 fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {
     let mut wda_setts = vec![];
 
+    // gui
     if !mafa_in.gui {
         wda_setts.push(WdaSett::NoGui);
     }
 
+    // socks5
     if comm::is_valid_socks5(&mafa_in.socks5) {
         wda_setts.push(WdaSett::PrepareUseSocksProxy(Cow::Borrowed(
             &mafa_in.socks5,
@@ -762,8 +823,19 @@ fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {
         wda_setts.push(WdaSett::Socks5Proxy(Cow::Borrowed(&mafa_in.socks5)));
         wda_setts.push(WdaSett::ProxyDnsSocks5);
     }
+
+    // tout pageload
     wda_setts.push(WdaSett::PageLoadTimeout(mafa_in.tout_page_load));
+
+    // tout script
     wda_setts.push(WdaSett::ScriptTimeout(mafa_in.tout_script));
+
+    // profile
+    if mafa_in.use_profile.len() > 0 {
+        wda_setts.push(WdaSett::BrowserProfileId(Cow::Borrowed(
+            &mafa_in.use_profile,
+        )))
+    }
 
     dbgg!(&wda_setts);
 
@@ -784,6 +856,7 @@ pub fn init_wda(mafa_in: &MafaInput) -> Result<WebDrvAstn<GeckoDriver>> {
                     return Err(MafaError::WebDrvCmdRejected(err, msg));
                 }
             }
+            WdaError::InvalidBrowserProfileId => return Err(MafaError::InvalidUseProfile),
             _ => {
                 return Err(MafaError::UnexpectedWda(err_wda));
             }
