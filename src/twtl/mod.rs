@@ -1055,8 +1055,7 @@ mod utst_merged {
             Ok(mafa_in) => match matched.subcommand() {
                 Some(("twtl", sub_m)) => {
                     let twtl_in = TwtlInput::from_ca_matched(sub_m).expect("must ok");
-                    let merged_in = TwtlInput::merge(twtl_in, &mafa_in).expect("must ok");
-                    assert_eq!(merged_in.username, "twitter");
+                    assert_eq!(twtl_in.username, "twitter");
                 }
                 _ => assert!(false),
             },

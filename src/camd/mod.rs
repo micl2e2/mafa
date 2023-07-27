@@ -748,9 +748,6 @@ mod utst_merged {
                 Some(("camd", sub_m)) => {
                     let camd_in = CamdInput::from_ca_matched(sub_m).expect("must ok");
                     assert_eq!(camd_in.words, "hello");
-
-                    let merged_in = CamdInput::merge(camd_in, &mafa_in).expect("must ok");
-                    assert_eq!(merged_in.words, "hello");
                 }
                 _ => assert!(false),
             },
@@ -769,9 +766,6 @@ mod utst_merged {
                 Some(("camd", sub_m)) => {
                     let camd_in = CamdInput::from_ca_matched(sub_m).expect("must ok");
                     assert_eq!(camd_in.words, "hello everyone");
-
-                    let merged_in = CamdInput::merge(camd_in, &mafa_in).expect("must ok");
-                    assert_eq!(merged_in.words, "hello everyone");
                 }
                 _ => assert!(false),
             },

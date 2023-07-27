@@ -499,9 +499,9 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 
 [[package]]
 name = "wda"
-version = "0.1.0-beta8"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c869cdbf277a62eb2e95e1e1828ad388af4a7c9287db950b7730695bc0687aa8"
+checksum = "81018a4b5f37feadd7442c3368023e4af44d18949de72898155a6bfa0f20363d"
 dependencies = [
  "base64",
  "libc",
