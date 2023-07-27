@@ -79,17 +79,16 @@ fn main() {
 
                 // needs alive wda
                 if mafa_in.list_profile {
-                    ignore_subcmd = true;
-
                     ntf.lock()
                         .expect("buggy")
                         .notify(MafaEvent::ExactUserRequest {
                             cate: Category::Mafa,
                             kind: EurKind::ListProfile,
-                            output: "listing...".into(),
+                            output: wda_inst.existing_profiles().expect("bug").join(","),
                         });
 
-                    todo!();
+                    ignore_subcmd = true;
+                    exit_code = 0;
                 }
 
                 // subcommand
