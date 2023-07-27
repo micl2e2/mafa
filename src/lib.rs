@@ -805,6 +805,10 @@ impl<'a, 'b, 'c, I, C: Default> MafaClient<'a, 'b, 'c, I, C> {
             caches: Default::default(),
         }
     }
+
+    pub fn set_sub_input(&mut self, newin: I) {
+        self.sub_input = newin;
+    }
 }
 
 fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {

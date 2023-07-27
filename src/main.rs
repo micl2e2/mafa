@@ -361,6 +361,8 @@ fn gtrans_i_mode(
                         gtrans_in,
                         wda_inst,
                     ));
+                } else {
+                    client.as_mut().expect("bug").set_sub_input(gtrans_in);
                 }
 
                 match client.as_mut().expect("bug").handle(None) {
@@ -484,6 +486,8 @@ fn twtl_i_mode(
                         twtl_in,
                         wda_inst,
                     ));
+                } else {
+                    client.as_mut().expect("bug").set_sub_input(twtl_in);
                 }
 
                 match client.as_mut().expect("bug").handle(None) {
@@ -610,6 +614,8 @@ fn camd_i_mode(
                         camd_in,
                         wda_inst,
                     ));
+                } else {
+                    client.as_mut().expect("bug").set_sub_input(camd_in);
                 }
 
                 match client.as_mut().expect("bug").handle(None) {
