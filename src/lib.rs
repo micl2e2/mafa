@@ -173,7 +173,7 @@ pub mod opts {
         pub fn long_helper() -> String {
             let bf = "Enable silent mode
 
-Any insignificant information redirected to STDOUT will be hidden.";
+Any insignificant output redirected to standard output will be hidden.";
 
             let mut af_buf = [0u8; 256];
 
@@ -198,13 +198,13 @@ Any insignificant information redirected to STDOUT will be hidden.";
         }
         #[inline]
         pub fn helper() -> &'static str {
-            "Print without color."
+            "Enable non-color mode"
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "Print without color
+            let bf = "Enable non-color mode
 
-Any information will be printed without using ANSI escape codes.";
+Any output will be printed without color. Default is with color.";
 
             let mut af_buf = [0u8; 256];
 
@@ -231,6 +231,22 @@ Any information will be printed without using ANSI escape codes.";
         pub fn helper() -> &'static str {
             "Use classical ASCII style"
         }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Use classical ASCII style
+
+ASCII style only allows ASCII characters to mafa's meta information displaying. Default is Unicode mode, which allows more distinguishable characters for displaying.
+
+NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
+            let mut af_buf = [0u8; 128];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
     }
 
     pub struct WrapWidth;
@@ -253,13 +269,13 @@ Any information will be printed without using ANSI escape codes.";
         }
         #[inline]
         pub fn helper() -> &'static str {
-            "Wrap output with width limit"
+            "Wrap output with a width limit"
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = r#"Wrap output with width limit
+            let bf = r#"Wrap output with a width limit
 
-NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
+NOTE: the minimun is 18, any value smaller than 18 will fallback to 80."#;
             let mut af_buf = [0u8; 128];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -293,7 +309,7 @@ Default is "NoBreak" style. This change the style to "MayBreak".
 
 NOTE: This is a hint option, components may ignore it.
 
-NOTE: "NoBreak" suits for languages that rely on ASCII SPACE to delimit words. "MayBreak" suits for otherwise languages. See more details in Bwrap documentation: https://docs.rs/bwrap/latest/bwrap/enum.WrapStyle.html."#;
+NOTE: "NoBreak" suits for languages that rely om ASCII SPACE to delimit words. "MayBreak" suits for otherwise languages. See more details in Bwrap documentation: https://docs.rs/bwrap/latest/bwrap/enum.WrapStyle.html."#;
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -325,7 +341,7 @@ NOTE: "NoBreak" suits for languages that rely on ASCII SPACE to delimit words. "
 
 Run the underlying web browser in GUI mode.
 
-USED WITH CAUTION: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness.";
+NOTE: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness, use with caution.";
 
             let mut af_buf = [0u8; 256];
 
@@ -354,9 +370,14 @@ USED WITH CAUTION: when GUI mode is on, any user operation on web browser interf
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "List all existing browser profiles
+            let bf = "List all existing profiles's ID
 
-Note that....";
+Profiles' ID is surrounded by a pair of brackets:
+...
+<PROFILE ID>
+<PROFILE ID>
+<PROFILE ID>
+...";
 
             let mut af_buf = [0u8; 256];
 
@@ -393,11 +414,11 @@ Note that....";
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "Use specific browser profile
+            let bf = "Use specific profile ID
 
-NOTE: the profile will be created if not existing.
+Profile IDs are strings including ONLY letters, nimbers or hyphens.
 
-NOTE: the size of browser profiles is non-trivial, use with caution!
+NOTE: the profile will be created if not existing. Browser profiles' size is non-trivial, use with caution.
 ";
 
             let mut af_buf = [0u8; 256];
@@ -427,13 +448,13 @@ NOTE: the size of browser profiles is non-trivial, use with caution!
         }
         #[inline]
         pub fn helper() -> &'static str {
-            "Fetch with SOCKS5 proxy                                        "
+            "Fetch data through SOCKS5 praxy                                        "
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "Fetch with SOCKS5 proxy
+            let bf = "Fetch data through SOCKS5 proxy
 
-The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries at first initialization.";
+The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries when initialization.";
 
             let mut af_buf = [0u8; 256];
 
@@ -472,7 +493,9 @@ The default SOCKS5 proxy used by the underlying web browser to fetch data. This 
         pub fn long_helper() -> String {
             let bf = "Timeout for page loading(ms)
 
-The default timeout for loading web page(i.e., opening a website). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.";
+The default timeout for loading web page(i.e., opening a website). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
+
+NOTE: customizing this option mostly brings the negative effect for page loading, do not use unless you know what you are doing.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -510,7 +533,9 @@ The default timeout for loading web page(i.e., opening a website). Refer to WebD
         pub fn long_helper() -> String {
             let bf = "Timeout for script evaluation(ms)
 
-The default timeout for script evaluation(i.e., evaluating JavaScript synchronously or asynchronously). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.";
+The default timeout for script evaluation(i.e., evaluating JavaScript synchronously or asynchronously). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
+
+NOTE: customizing this option mostly brings the negative effect for script evaluation, do not use unless you know what you are doing.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -548,9 +573,12 @@ The default timeout for script evaluation(i.e., evaluating JavaScript synchronou
         pub fn long_helper() -> String {
             let bf = r#"The caching mechanism
 
-Available values are: LOCAL, REMOTE, NO.
+Avvilable values are: LOCAL, REMOTE, NO.
 
-LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored on the internet and can be readily accessed and fetched, note that this option will override the corresponding cache; NO instructs mafa to build cache freshly, this usually needs more time, compared to other mechanisms."#;
+LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored in a dedicated remote repository, note that this option overrides all existing caches; NO instructs mafa to build cache freshly, this may need more time, compared to other mechanisms.
+
+Performance : LOCAL > REMOTE > NO
+Stability   :    NO > REMOTE > LOCAL"#;
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -739,7 +767,7 @@ There is NO WARRANTY, to the extent permitted by law.";
             .long_about(
                 "Enter interactive mode
 
-With interactive mode, Mafa's components interact with websites statefully,
+With interactive mode, mafa's components interact with websites statefully,
 performing tasks without full initializtion of the underlying WebDriver,
 this usually results in faster performance.
 
