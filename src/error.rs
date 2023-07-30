@@ -32,6 +32,9 @@ pub enum MafaError {
     ///
     /// corresponds to Wda InvalidBrowserProfileId error
     InvalidUseProfile,
+    ///
+    /// corresponds to Wda BrowserBinaryNotFound error
+    FirefoxNotFound,
     CacheRebuildFail(CacheRebuildFailKind),
     CacheNotBuildable,
     AllCachesInvalid,

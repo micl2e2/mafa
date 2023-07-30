@@ -197,6 +197,10 @@ impl EventNotifier {
         self.color = false;
     }
 
+    ///
+    /// Note that, this is not supposed to respond the errors directly,
+    /// but events, one of which is `FatalMafaError`, which is the
+    /// entry to handle errors.
     pub fn notify(&mut self, ev: MafaEvent) {
         let mut is_skip_push = false;
 
@@ -731,6 +735,22 @@ impl EventNotifier {
                         cate.as_str(),
                         fk
                     );
+                }
+
+                MafaError::FirefoxNotFound => {
+                    if !self.is_prev_final() {
+                        eprintln_not!(self.smode, "");
+                    }
+
+                    eprint_not!(
+                        self.smode,
+                        if self.color {
+                            "\u{1b}[31;1merror: \u{1b}[0m"
+                        } else {
+                            "error: "
+                        }
+                    );
+                    eprintln_not!(self.smode, "Firefox not installed");
                 }
 
                 err_other => {

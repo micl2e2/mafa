@@ -889,6 +889,7 @@ pub fn init_wda(mafa_in: &MafaInput) -> Result<WebDrvAstn<GeckoDriver>> {
                 }
             }
             WdaError::InvalidBrowserProfileId => return Err(MafaError::InvalidUseProfile),
+            WdaError::BrowserBinaryNotFound => return Err(MafaError::FirefoxNotFound),
             _ => {
                 return Err(MafaError::UnexpectedWda(err_wda));
             }

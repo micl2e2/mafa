@@ -78,7 +78,9 @@ fn main() {
 
                 if let Err(e) = wda_inst {
                     match e {
-                        MafaError::InvalidUseProfile | MafaError::UnexpectedWda(_) => {
+                        MafaError::InvalidUseProfile
+                        | MafaError::FirefoxNotFound
+                        | MafaError::UnexpectedWda(_) => {
                             ntf.lock().expect("bug").notify(MafaEvent::FatalMafaError {
                                 cate: Category::Mafa,
                                 err: e,

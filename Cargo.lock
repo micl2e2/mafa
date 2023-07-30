@@ -379,7 +379,7 @@ checksum = "b06a4cde4c0f271a446782e3eff8de789548ce57dbc8eca9292c27f4a42004b4"
 
 [[package]]
 name = "mafa"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "bwrap",
  "clap",
@@ -880,9 +880,9 @@ checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
 
 [[package]]
 name = "wda"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb8e3e315ef1e97ada0bd9d79b0c47374fe23f047a5219b1c52252c7ae289a28"
+checksum = "330bbdd6160f49c2aae4b34d5c2b1702f61b07168182ed62d11cd4c4b8bc2295"
 dependencies = [
  "base64 0.21.2",
  "curl",
