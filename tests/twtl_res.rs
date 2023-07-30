@@ -25,13 +25,10 @@ mod twtl_res {
 
         let matched = mafa::get_cmd().try_get_matches_from(vec![
             "mafa", //
-            // "--gui", //
-            "--timeout-script",
-            "10000",
-            "--socks5",
-            &pxy,
-            "twtl",
-            "mafa_rs",
+            // "--gui", // DEBUG ONLY
+            // "--timeout-script",
+            // "120000",
+            "--socks5", &pxy, "twtl", "mafa_rs",
         ]);
         let matched = matched.expect("must ok");
 

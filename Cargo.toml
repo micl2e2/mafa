@@ -27,7 +27,7 @@ tst_twtl_logined = []
 [dependencies]
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
-wda = { version = "0.3.0",  features = ["firefox"] }
+wda = { version = "0.4.0",  features = ["firefox"] }
 bwrap = { version = "1.0.0", features = ["use_std"] }
 regex = "1.0.0"
 clap = { version = "4.0.0", features = ["cargo"] }

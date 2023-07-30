@@ -864,6 +864,53 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
         Ok(())
     }
 
+    fn ensure_not_login_page(&self) -> Result<()> {
+        // check current url
+        match self.wda.get_url() {
+            Ok(url) => {
+                dbgg!(&url);
+                if url.contains("login") {
+                    return Err(MafaError::RequireLogin);
+                }
+            }
+            Err(err_geturl) => {
+                if let WdaErr::WdcFail(WdcErr::BadDrvCmd(err, msg)) = err_geturl {
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_geturl));
+                }
+            }
+        }
+
+        // check page source
+        match self.wda.page_src(None) {
+            Ok(may_v) => {
+                if let Some(v) = may_v {
+                    let s = String::from_utf8_lossy(&v);
+                    if s.contains("Sign in") {
+                        return Err(MafaError::RequireLogin);
+                    }
+                }
+            }
+            Err(err_geturl) => {
+                if let WdaErr::WdcFail(WdcErr::BadDrvCmd(err, msg)) = err_geturl {
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                } else {
+                    return Err(MafaError::UnexpectedWda(err_geturl));
+                }
+            }
+        }
+
+        #[cfg(all(target_family = "unix", feature = "dev"))]
+        {
+            let _ign = self
+                .wda
+                .page_src(Some("/tmp/twtl-ensure-not-login-before-ok.html"));
+        }
+
+        Ok(())
+    }
+
     fn fetch(&self, tuid: &str, n_tweets: u16) -> Result<Vec<String>> {
         let url = format!("https://twitter.com/{}", tuid);
 
@@ -888,21 +935,7 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
                 }
             }
 
-            // check needs login
-            match self.wda.get_url() {
-                Ok(url) => {
-                    if url.contains("login") {
-                        return Err(MafaError::RequireLogin);
-                    }
-                }
-                Err(err_geturl) => {
-                    if let WdaErr::WdcFail(WdcErr::BadDrvCmd(err, msg)) = err_geturl {
-                        return Err(MafaError::WebDrvCmdRejected(err, msg));
-                    } else {
-                        return Err(MafaError::UnexpectedWda(err_geturl));
-                    }
-                }
-            }
+            self.ensure_not_login_page()?;
 
             is_url_reached = true;
             self.notify(MafaEvent::ConnectTimeoutRetry {
@@ -954,6 +987,7 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, TwtlInput, UlPath> {
                                     dbgmsg!("keep all we've got, skip others");
                                     break;
                                 } else {
+                                    self.ensure_not_login_page()?;
                                     return Err(MafaError::AllCachesInvalid);
                                 }
                                 // reaching here may bc twitter timeline has huge change, or,

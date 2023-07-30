@@ -37,7 +37,7 @@ mod gtrans_err {
                     if let Err(e) = wda_inst {
                         match e {
                             MafaError::InvalidSocks5Proxy
-                            | MafaError::UnexpectedWda(FetchWebDriver(_)) => {}
+                            | MafaError::UnexpectedWda(wda::WdaError::InvalidSocks5Proxy) => {}
                             _ => assert!(false, "unexpected error {:?}", e),
                         }
                     }
