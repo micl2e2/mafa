@@ -750,7 +750,15 @@ impl EventNotifier {
                             "error: "
                         }
                     );
+
                     eprintln_not!(self.smode, "Firefox not installed");
+
+                    // extra hint
+                    eprintln_not!(
+                        self.smode,
+                        "{}",
+                        bwrap::wrap_nobrk!(get_ff_bin_tip(self.color), 80, "       ")
+                    );
                 }
 
                 err_other => {
@@ -952,5 +960,19 @@ impl EventNotifier {
         io::stdout().flush().unwrap();
 
         dbgg!(&self.queue);
+    }
+}
+
+fn get_ff_bin_tip(color: bool) -> &'static str {
+    let osinfo = os_info::get();
+    match osinfo.os_type() {
+        os_info::Type::Ubuntu => {
+            if color {
+                "  \u{1b}[32mtip\u{1b}[0m: Only Firefox ESR is supported on this platform, please install `firefox-esr` package"
+            } else {
+                "  tip: Only Firefox ESR is supported on this platform, please install `firefox-esr` package"
+            }
+        }
+        _ => "",
     }
 }

@@ -36,6 +36,7 @@ libc = "0.2.0"
 once_cell = "1.0.0"
 rustyline = { version = "12.0.0", features = [], optional = true }
 quick-xml = { version = "0.29.0", features = ["serialize"], optional = true }
+os_info = { version = "3.7.0", default-features = false }
 
 [profile.release]
 strip = "symbols"
