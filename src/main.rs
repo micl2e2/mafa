@@ -222,7 +222,7 @@ fn enter_i_mode(
 ) -> u8 {
     let mut rl = DefaultEditor::new().unwrap();
     loop {
-        let readline = rl.readline("[mafa]>> ");
+        let readline = rl.readline("[mafa] >> ");
         match readline {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
