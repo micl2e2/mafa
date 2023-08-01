@@ -289,98 +289,6 @@ Available values are: json, xml."#
             "Login or logout Twitter account"
         }
     }
-
-    pub struct SilentMode;
-    impl SilentMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "SILENT_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "silent"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Enable silent mode                                      "
-        }
-    }
-
-    pub struct GuiMode;
-    impl GuiMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "GUI_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "gui"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Enable GUI mode"
-        }
-    }
-
-    pub struct Socks5Proxy;
-    impl Socks5Proxy {
-        #[inline]
-        pub fn id() -> &'static str {
-            "SOCKS5_PROXY"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "socks5"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Fetch with SOCKS5 proxy"
-        }
-    }
-
-    pub struct TimeoutPageLoad;
-    impl TimeoutPageLoad {
-        #[inline]
-        pub fn id() -> &'static str {
-            "TIMEOUT_PAGE_LOAD"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "timeout-pageload"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Timeout for page loading(ms)"
-        }
-    }
-
-    pub struct TimeoutScript;
-    impl TimeoutScript {
-        #[inline]
-        pub fn id() -> &'static str {
-            "TIMEOUT_SCRIPT"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "timeout-script"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Timeout for script evaluation(ms)"
-        }
-    }
 }
 
 pub fn get_cmd() -> ClapCommand {
@@ -428,58 +336,13 @@ pub fn get_cmd() -> ClapCommand {
             .help(O::helper())
     };
 
-    let opt_silient = {
-        type O = opts::SilentMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_gui = {
-        type O = opts::GuiMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_socks5 = {
-        type O = opts::Socks5Proxy;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
-    let opt_tout_pageload = {
-        type O = opts::TimeoutPageLoad;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
-    let opt_tout_script = {
-        type O = opts::TimeoutScript;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
     let cmd_twtl = ClapCommand::new("twtl")
         .about("Twitter users' timeline")
         .arg(opt_username)
         .arg(opt_ntweets)
         .arg(opt_saveto)
         .arg(opt_saveformat)
-        .arg(opt_silient)
-        .arg(opt_trylogin)
-        .arg(opt_gui)
-        .arg(opt_socks5)
-        .arg(opt_tout_pageload)
-        .arg(opt_tout_script);
+        .arg(opt_trylogin);
 
     cmd_twtl
 }

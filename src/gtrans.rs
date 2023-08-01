@@ -257,138 +257,6 @@ Check --list-lang for all supported languages."#;
             String::from_utf8_lossy(&af_buf[0..rl]).to_string()
         }
     }
-
-    pub struct CacheMech;
-    impl CacheMech {
-        #[inline]
-        pub fn id() -> &'static str {
-            "CACHE_MECHNISM"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "cache"
-        }
-        #[inline]
-        pub fn def_val() -> &'static str {
-            "LOCAL"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "The caching mechanism"
-        }
-        #[inline]
-        pub fn long_helper() -> String {
-            let bf = r#"The caching mechanism
-
-Available values are: LOCAL, REMOTE, NO.
-
-LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored on the internet and can be readily accessed and fetched, note that this option will override the corresponding cache; NO instructs mafa to build cache freshly, this usually needs more time, compared to other mechanisms."#;
-            let mut af_buf = [0u8; 512];
-
-            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
-                .unwrap()
-                .wrap()
-                .unwrap();
-
-            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
-        }
-    }
-
-    pub struct SilentMode;
-    impl SilentMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "SILENT_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "silent"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Enable silent mode                                              "
-        }
-    }
-
-    pub struct GuiMode;
-    impl GuiMode {
-        #[inline]
-        pub fn id() -> &'static str {
-            "GUI_MODE"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "gui"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Enable GUI mode"
-        }
-    }
-
-    pub struct Socks5Proxy;
-    impl Socks5Proxy {
-        #[inline]
-        pub fn id() -> &'static str {
-            "SOCKS5_PROXY"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "socks5"
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Fetch with SOCKS5 proxy"
-        }
-    }
-
-    pub struct TimeoutPageLoad;
-    impl TimeoutPageLoad {
-        #[inline]
-        pub fn id() -> &'static str {
-            "TIMEOUT_PAGE_LOAD"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "timeout-pageload"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Timeout for page loading(ms)"
-        }
-    }
-
-    pub struct TimeoutScript;
-    impl TimeoutScript {
-        #[inline]
-        pub fn id() -> &'static str {
-            "TIMEOUT_SCRIPT"
-        }
-        #[inline]
-        pub fn longopt() -> &'static str {
-            "timeout-script"
-        }
-        #[inline]
-        pub fn n_args() -> Range<usize> {
-            1..2
-        }
-        #[inline]
-        pub fn helper() -> &'static str {
-            "Timeout for script evaluation(ms)"
-        }
-    }
 }
 
 pub fn get_cmd() -> ClapCommand {
@@ -429,57 +297,12 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
-    let opt_silient = {
-        type O = opts::SilentMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_gui = {
-        type O = opts::GuiMode;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .action(ClapArgAction::SetTrue)
-            .help(O::helper())
-    };
-
-    let opt_socks5 = {
-        type O = opts::Socks5Proxy;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
-    let opt_tout_pageload = {
-        type O = opts::TimeoutPageLoad;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
-    let opt_tout_script = {
-        type O = opts::TimeoutScript;
-        ClapArg::new(O::id())
-            .long(O::longopt())
-            .num_args(O::n_args())
-            .help(O::helper())
-    };
-
     let cmd_gtrans = ClapCommand::new("gtrans")
         .about("Translation by Google Translate")
         .arg(opt_words)
         .arg(opt_list_lang)
         .arg(opt_tl)
-        .arg(opt_sl)
-        .arg(opt_silient)
-        .arg(opt_gui)
-        .arg(opt_socks5)
-        .arg(opt_tout_pageload)
-        .arg(opt_tout_script);
+        .arg(opt_sl);
 
     cmd_gtrans
 }
