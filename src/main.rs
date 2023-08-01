@@ -336,7 +336,7 @@ fn gtrans_i_mode(
                     args.push(split);
                 }
 
-                let gtrans_in = GtransInput::from_i_mode2(args);
+                let gtrans_in = GtransInput::from_imode_args(args);
 
                 match gtrans_in {
                     Ok(_) => {}
@@ -464,7 +464,7 @@ fn twtl_i_mode(
                     args.push(split);
                 }
 
-                let twtl_in = TwtlInput::from_i_mode2(args);
+                let twtl_in = TwtlInput::from_imode_args(args);
 
                 match twtl_in {
                     Ok(_) => {}
@@ -591,7 +591,7 @@ fn camd_i_mode(
                     args.push(split);
                 }
 
-                let camd_in = CamdInput::from_i_mode2(args);
+                let camd_in = CamdInput::from_imode_args(args);
 
                 match camd_in {
                     Ok(_) => {}

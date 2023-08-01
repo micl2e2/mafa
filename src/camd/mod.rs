@@ -76,7 +76,7 @@ impl CamdInput {
         Ok(camd_in)
     }
 
-    pub fn from_i_mode2(args: Vec<&str>) -> Result<CamdInput> {
+    pub fn from_imode_args(args: Vec<&str>) -> Result<CamdInput> {
         let cmd_camd = get_cmd();
 
         let m = cmd_camd.try_get_matches_from(args);

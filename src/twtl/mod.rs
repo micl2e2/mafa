@@ -110,7 +110,7 @@ impl TwtlInput {
         Ok(twtl_in)
     }
 
-    pub fn from_i_mode2(args: Vec<&str>) -> Result<TwtlInput> {
+    pub fn from_imode_args(args: Vec<&str>) -> Result<TwtlInput> {
         let cmd_twtl = get_cmd();
 
         let m = cmd_twtl.try_get_matches_from(args);

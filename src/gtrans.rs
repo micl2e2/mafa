@@ -98,7 +98,7 @@ impl GtransInput {
         Ok(gtrans_in)
     }
 
-    pub fn from_i_mode2(args: Vec<&str>) -> Result<GtransInput> {
+    pub fn from_imode_args(args: Vec<&str>) -> Result<GtransInput> {
         let cmd_gtrans = get_cmd();
 
         let m = cmd_gtrans.try_get_matches_from(args);
