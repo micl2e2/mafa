@@ -40,3 +40,4 @@ os_info = { version = "3.7.0", default-features = false }
 
 [profile.release]
 strip = "symbols"
+lto = true

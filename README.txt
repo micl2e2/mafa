@@ -1,26 +1,26 @@
-                             ━━━━━━━━━━━━━
+                             _____________
+
                                   MAFA
 
                               Michael Lee
-                             ━━━━━━━━━━━━━
+                             _____________
 
 
 Table of Contents
-─────────────────
+_________________
 
 A Small Demo
 Installation
 .. Prerequisite
-.. Option 1: Cargo install (recommended)
-.. Option 2: Build from source
-.. Option 3: Prebuilt binaries
-Mafa is for me?
-What is Mafa
+.. Option 1: Cargo install
+.. Option 2: Prebuilt binaries
+.. Option 3: Build from source
+About
 .. How Mafa works
 .. Why Mafa
-.. About Mafa
-Supported components
-.. What about website "…"?
+.. Background
+Mafa Components
+.. More and more
 Contributing
 License
 
@@ -29,7 +29,7 @@ License
 
 
 A Small Demo
-════════════
+============
 
   /(captured by [LICEcap])/
 
@@ -40,58 +40,33 @@ A Small Demo
 
 
 Installation
-════════════
+============
 
 Prerequisite
-────────────
+~~~~~~~~~~~~
 
   Mafa does not work alone, below are programs that it depends on:
 
-  1. firefox (91 or later)
-
-  2. curl (any version)
-
-  3. tar (any version)
-
-  4. gzip (any version)
+  1. Firefox
+     - version: 91 or later
+     - edition: ESR or Latest.
 
 
-Option 1: Cargo install (recommended)
-─────────────────────────────────────
+Option 1: Cargo install
+~~~~~~~~~~~~~~~~~~~~~~~
 
-  This is recommended because by `cargo install', you always get the
-  latest stable version of Mafa.
+  If you have Cargo installed already, then you can
 
-  If you have Cargo installed, then you can
-
-  ┌────
-  │ cargo install mafa
-  │ 
-  │ # check installed version
-  │ mafa --version
-  └────
+  ,----
+  | cargo install mafa
+  | 
+  | # check installed version
+  | mafa --version
+  `----
 
 
-Option 2: Build from source
-───────────────────────────
-
-  ┌────
-  │ # grab the source
-  │ git clone https://github.com/micl2e2/mafa
-  │ 
-  │ # into source directory
-  │ cd mafa
-  │ 
-  │ # build
-  │ cargo build --release --features imode,twtl,gtrans
-  │ 
-  │ # check built version
-  │ ./target/release/mafa --version
-  └────
-
-
-Option 3: Prebuilt binaries
-───────────────────────────
+Option 2: Prebuilt binaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Check [releases].
 
@@ -99,44 +74,37 @@ Option 3: Prebuilt binaries
 [releases] <https://github.com/micl2e2/mafa/releases>
 
 
-Mafa is for me?
-═══════════════
+Option 3: Build from source
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Mafa is developed for the ones who want to benefit from Web's openness
-  as much as possible.
-
-  However, Mafa is *NOT* for you if
-
-  • You want to browse websites without a web browser. (Mafa needs
-    Firefox)
-
-  • You want to capture every detail of a website. (Use your favorite
-    web browser directly)
-
-  • You plan to crawl a whole website and extract all its data. (A
-    dedicated web crawler does a better job)
+  WIP
 
 
-What is Mafa
-════════════
+About
+=====
 
-  Mafa is a command-line tool that helps people interact with online
-  websites in a terminal(tty). It accesses websites through
-  /components/. Components are child programs that rely on [WebDriver]
-  to do their job. Each module has a fixed, predefined website url and
-  has a specific task for that site. With components, users can browse
-  websites without interacting with web browsers directly.
+  Mafa is an in-terminal web browser companion. It resides in terminal,
+  help perple browse websites' content readily and efficiently.  Mafa
+  accomplishs its tasks by [Mafa Components].
 
-  Note that Mafa supports wbsites selectively rather than arbitrarily,
-  the selected ones are listed in [below].
+  Mafa develops for the ones who want to benefit from Web's openness as
+  much as possible.
+
+  However, Mafa is *NOT* suitable for the following tasks:
+
+  - Browse websites without a web browser.  (Mafa needs Firefox)
+
+  - Capture every detail of a website.  (Open your favorite web browser
+    directly)
+
+  - Crawl a whole website and extract all its data.  (A dedicated web
+    crawler does a better job)
 
 
-[WebDriver] <https://www.w3.org/TR/webdriver>
-
-[below] See section Supported components
+[Mafa Components] Unknown reference
 
 How Mafa works
-──────────────
+~~~~~~~~~~~~~~
 
   Mafa leverages [WebDriver] to achieve its goals. More specifically,
   Mozilla's [GeckoDriver] is in use. With WebDriver, Mafa can act like a
@@ -149,10 +117,10 @@ How Mafa works
 
 
 Why Mafa
-────────
+~~~~~~~~
 
-Usable & Convenient
-╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+Mafa is Usable & Convenient
+---------------------------
 
   Unlike other counterparts, Mafa strives to balance usability and
   convenience: Mafa will try its best to finish the task on its own or
@@ -162,8 +130,8 @@ Usable & Convenient
   browser companion, *not* a replacement.
 
 
-Neutral
-╌╌╌╌╌╌╌
+Mafa is Neutral
+---------------
 
   The underlying WebDriver backs by a nearly full-functional web
   browser. Overall, Mafa default *not* to subjectively strip any feature
@@ -183,17 +151,17 @@ Neutral
 [Ecosia] <https://www.ecosia.org>
 
 
-Stable & Long-lasting
-╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+Mafa is Stable & Long-lasting
+-----------------------------
 
-  One of Mafa's goals is to handle websites stably for a relatively long
-  period. Modern web pages are famous for their dynamic characteristic.
-  However, Mafa can handle those dynamic and unpredictable web pages as
-  effortlessly as the static ones.
+  One of Mafa's goals is to handle websites stably for a relatively
+  **long** period. Modern web pages are famous for their dynamic
+  characteristic. However, Mafa can handle those dynamic and
+  unpredictable web pages as effortlessly as the static ones.
 
 
-About Mafa
-──────────
+Background
+~~~~~~~~~~
 
   Although Mafa is initially developed for (*M*)aking (*A*)PI (*F*)ree
   (*A*)gain, it is not realistic. Instead of freeing APIs, Mafa frees
@@ -219,38 +187,54 @@ About Mafa
 <https://www.gnu.org/philosophy/free-sw.en.html>
 
 
-Supported components
-════════════════════
-
-  • TWTL: Query Twitter users' timeline.
-
-  • GTRANS: Query translation from Google Translate.
-
-  • CAMD: Query word definition from Cambridge Dictionary.
-
-  • IMODE: Interactive mode.
+Mafa Components
+===============
 
 
-What about website "…"?
-───────────────────────
 
-  Yes! Mafa is open in its heart. If your favorite websites are not
-  listed here, you can _submit a feature request_ or write a Mafa
-  component for your favorite website, as long as that site meets the
-  following requirements:
+  /Mafa Components/ are child programs that rely on [WebDriver] to do
+  their job. Each module has a fixed, predefined website url and has a
+  specific task for that site. With components, users can browse
+  websites without interacting with web browsers directly.
 
-  1. It will not shut down in the foreseeable future.
-  2. The valuable data on it is in text form.
+  Note that Mafa supports wbsites /selectively/ rather than
+  /arbitrarily/, the selected ones are:
+
+  - TWTL: Query Twitter users' timeline.
+
+  - GTRANS: Query translation from Google Translate.
+
+  - CAMD: Query word definition from Cambridge Dictionary.
+
+  - IMODE: Interactive mode.
+
+
+[WebDriver] <https://www.w3.org/TR/webdriver>
+
+More and more
+~~~~~~~~~~~~~
+
+  Mafa is open in its heart! If your favorite websites are not listed
+  here, you can [submit a features request] or write a component for
+  your favorite website, as long as that site meets the following
+  requirements:
+
+  1. Not shut down in the foreseeable future.
+  2. The valuable data is in text form.
+  3. The functionality of public-offered APIs is limited.
+
+
+[submit a features request] <https://github.com/micl2e2/mafa/issues/new>
 
 
 Contributing
-════════════
+============
 
   Mafa is still in early development, any contribution is welcomed!
 
 
 License
-═══════
+=======
 
   Mafa is proudly licensed under GPLv3.
 
