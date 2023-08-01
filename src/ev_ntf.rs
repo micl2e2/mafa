@@ -241,11 +241,11 @@ impl EventNotifier {
                                 println_not!(self.smode, "");
                             }
 
-                            println_not!(self.smode, "[{}] Initializing...ok", cate.as_str());
+                            println_not!(self.smode, "[{}] Initialize...ok", cate.as_str());
                         }
                     }
                 } else {
-                    print_not!(self.smode, "[{}] Initializing...", cate.as_str());
+                    print_not!(self.smode, "[{}] Initialize...", cate.as_str());
                 }
             }
 
@@ -279,11 +279,11 @@ impl EventNotifier {
                             if !self.is_prev_final() {
                                 println_not!(self.smode, "");
                             }
-                            println_not!(self.smode, "[{}] Fetching result...ok", cate.as_str());
+                            println_not!(self.smode, "[{}] Fetch...ok", cate.as_str());
                         }
                     }
                 } else {
-                    print_not!(self.smode, "[{}] Fetching result...", cate.as_str());
+                    print_not!(self.smode, "[{}] Fetch...", cate.as_str());
                 }
             }
 
