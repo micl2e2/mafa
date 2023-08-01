@@ -1,35 +1,35 @@
-- [A Small Demo](#org4e8fafe)
-- [Installation](#org4598d4e)
-  - [Prerequisite](#orgdf880d2)
-  - [Option 1: Cargo install](#org0f2fd06)
-  - [Option 2: Prebuilt binaries](#org857dbc8)
-  - [Option 3: Build from source](#org27f557f)
-- [About](#orgee7f993)
-  - [How Mafa works](#orgbc587a1)
-  - [Why Mafa](#orgaf97c4b)
-  - [Background](#org4756027)
-- [Mafa Components](#orgc0d4ee5)
-  - [More and more](#orgb244e4f)
-- [Contributing](#orgefb4501)
-- [License](#org76b2a1e)
+- [Demos](#orgd5d1289)
+- [Installation](#org20d332f)
+  - [Prerequisite](#org44df25a)
+  - [Option 1: Cargo install](#org48598b8)
+  - [Option 2: Prebuilt binaries](#org2380410)
+  - [Option 3: Build from source](#orgdcf3330)
+- [About](#orgd4ebf41)
+  - [How Mafa works](#orgde37a74)
+  - [Why Mafa](#org178ffa2)
+  - [Background](#orgb77588a)
+- [Mafa Components](#org9808dfe)
+  - [More and more](#org6b97817)
+- [Contributing](#orgbd94b0e)
+- [License](#org8b3f7fe)
 
 
 
-<a id="org4e8fafe"></a>
+<a id="orgd5d1289"></a>
 
-# A Small Demo
+# Demos
 
-*(captured by [LICEcap](https://www.cockos.com/licecap/))*
+*(captured by [peek](https://github.com/phw/peek))*
 
-<img src="demo.gif" alt="demo" width="500px"/>
+<table> <tr> <td><img src="demo-twtl.gif"/><p align="center">Twitter Timeline</p></td> <td><img src="demo-gtrans.gif"/><p align="center">Google Translate</p></td> <td><img src="demo-camd.gif"/><p align="center">Cambridge Dictionary</p></td> </tr> </table>
 
 
-<a id="org4598d4e"></a>
+<a id="org20d332f"></a>
 
 # Installation
 
 
-<a id="orgdf880d2"></a>
+<a id="org44df25a"></a>
 
 ## Prerequisite
 
@@ -40,7 +40,7 @@ Mafa does not work alone, below are programs that it depends on:
     -   edition: ESR or Latest.
 
 
-<a id="org0f2fd06"></a>
+<a id="org48598b8"></a>
 
 ## Option 1: Cargo install
 
@@ -54,25 +54,25 @@ mafa --version
 ```
 
 
-<a id="org857dbc8"></a>
+<a id="org2380410"></a>
 
 ## Option 2: Prebuilt binaries
 
 Check [releases](https://github.com/micl2e2/mafa/releases).
 
 
-<a id="org27f557f"></a>
+<a id="orgdcf3330"></a>
 
 ## Option 3: Build from source
 
 WIP
 
 
-<a id="orgee7f993"></a>
+<a id="orgd4ebf41"></a>
 
 # About
 
-Mafa is an in-terminal web browser companion. It resides in terminal, help perple browse websites' content readily and efficiently. Mafa accomplishs its tasks by [Mafa Components](#org9fce6a7).
+Mafa is an in-terminal web browser companion. It resides in terminal, help perple browse websites' content readily and efficiently. Mafa accomplishs its tasks by [Mafa Components](#orga94caa7).
 
 Mafa develops for the ones who want to benefit from Web's openness as much as possible.
 
@@ -85,14 +85,14 @@ However, Mafa is **NOT** suitable for the following tasks:
 -   Crawl a whole website and extract all its data. (A dedicated web crawler does a better job)
 
 
-<a id="orgbc587a1"></a>
+<a id="orgde37a74"></a>
 
 ## How Mafa works
 
 Mafa leverages [WebDriver](https://www.w3.org/TR/webdriver) to achieve its goals. More specifically, Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With WebDriver, Mafa can act like a human, browsing websites naturally for its user.
 
 
-<a id="orgaf97c4b"></a>
+<a id="org178ffa2"></a>
 
 ## Why Mafa
 
@@ -116,7 +116,7 @@ It is noteworthy that Mafa does not wipe out the user identity by default, as a 
 One of Mafa's goals is to handle websites stably for a relatively ****long**** period. Modern web pages are famous for their dynamic characteristic. However, Mafa can handle those dynamic and unpredictable web pages as effortlessly as the static ones.
 
 
-<a id="org4756027"></a>
+<a id="orgb77588a"></a>
 
 ## Background
 
@@ -127,11 +127,11 @@ Some websites provide their data *publicly* but do not publish corresponding API
 Mafa is the one who commits to protexting web users' freedom. It tries its best to achieve the initial goal: as long as the data is publicly accessible to all users without discrimination, the APIs to access it should be as well.
 
 
-<a id="orgc0d4ee5"></a>
+<a id="org9808dfe"></a>
 
 # Mafa Components
 
-<a id="org9fce6a7"></a>
+<a id="orga94caa7"></a>
 
 *Mafa Components* are child programs that rely on [WebDriver](https://www.w3.org/TR/webdriver) to do their job. Each module has a fixed, predefined website url and has a specific task for that site. With components, users can browse websites without interacting with web browsers directly.
 
@@ -146,7 +146,7 @@ Note that Mafa supports wbsites *selectively* rather than *arbitrarily*, the sel
 -   IMODE: Interactive mode.
 
 
-<a id="orgb244e4f"></a>
+<a id="org6b97817"></a>
 
 ## More and more
 
@@ -157,14 +157,14 @@ Mafa is open in its heart! If your favorite websites are not listed here, you ca
 3.  The functionality of public-offered APIs is limited.
 
 
-<a id="orgefb4501"></a>
+<a id="orgbd94b0e"></a>
 
 # Contributing
 
 Mafa is still in early development, any contribution is welcomed!
 
 
-<a id="org76b2a1e"></a>
+<a id="org8b3f7fe"></a>
 
 # License
 

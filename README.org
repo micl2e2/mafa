@@ -1,11 +1,17 @@
 #+title: Mafa
 #+OPTIONS: num:nil toc:2
 
-* A Small Demo
+* Demos
 
-/(captured by [[https://www.cockos.com/licecap/][LICEcap]])/
+/(captured by [[https://github.com/phw/peek][peek]])/
 
-<img src="demo.gif" alt="demo" width="500px"/>
+<table>
+    <tr>
+        <td><img src="demo-twtl.gif"/><p align="center">Twitter Timeline</p></td>
+        <td><img src="demo-gtrans.gif"/><p align="center">Google Translate</p></td>
+        <td><img src="demo-camd.gif"/><p align="center">Cambridge Dictionary</p></td>
+    </tr>
+</table>
 
 
 * Installation
