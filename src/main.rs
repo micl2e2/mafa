@@ -319,7 +319,7 @@ fn gtrans_i_mode(
     let mut rl = DefaultEditor::new().unwrap();
     let mut client: Option<MafaClient<GtransInput, mafa::gtrans::Upath>> = None;
     loop {
-        let readline = rl.readline("[mafa/gtrans]>> ");
+        let readline = rl.readline("[mafa-gtrans] >> ");
         match readline {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
@@ -447,7 +447,7 @@ fn twtl_i_mode(
     let mut client: Option<MafaClient<TwtlInput, mafa::twtl::UlPath>> = None;
 
     loop {
-        let readline = rl.readline("[mafa/twtl]>> ");
+        let readline = rl.readline("[mafa-twtl] >> ");
         match readline {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
@@ -574,7 +574,7 @@ fn camd_i_mode(
     let mut client: Option<MafaClient<CamdInput, mafa::camd::Upath>> = None;
 
     loop {
-        let readline = rl.readline("[mafa/camd]>> ");
+        let readline = rl.readline("[mafa-camd] >> ");
         match readline {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
