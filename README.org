@@ -7,9 +7,20 @@
 
 <table>
     <tr>
-        <td><img src="demo-twtl.gif"/><p align="center">Twitter Timeline</p></td>
-        <td><img src="demo-gtrans.gif"/><p align="center">Google Translate</p></td>
-        <td><img src="demo-camd.gif"/><p align="center">Cambridge Dictionary</p></td>
+    <td>
+    <img src="demo-twtl.gif" height="160px"/>
+    <p align="center">
+    <a href="https://twitter.com/">Twitter Timeline</a></p></td>
+    
+    <td>
+    <img src="demo-gtrans.gif" height="160px"/>
+    <p align="center">
+    <a href="https://translate.google.com/">Google Translate</a></p></td>
+    
+    <td>
+    <img src="demo-camd.gif" height="160px"/>
+    <p align="center">
+    <a href="https://dictionary.cambridge.org/us/dictionary/english/">Cambridge Dictionary</a></p></td>
     </tr>
 </table>
 
