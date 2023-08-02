@@ -1,24 +1,24 @@
 
 # Table of Contents
 
--   [Demos](#orgc0f08f6)
--   [Installation](#org9926458)
-    -   [Prerequisite](#org7c6ab90)
-    -   [Option 1: Cargo install](#org1326b87)
-    -   [Option 2: Prebuilt binaries](#org0203cd7)
-    -   [Option 3: Build from source](#org0f66875)
--   [About](#org32c6877)
-    -   [How Mafa works](#org92f86d7)
-    -   [Why Mafa](#org0bda391)
-    -   [Background](#orgd913d10)
--   [Mafa Components](#orgdea748e)
-    -   [More and more](#orgf5d024e)
--   [Contributing](#org75635db)
--   [License](#org6b03891)
+-   [Demos](#org935097a)
+-   [Installation](#org162533a)
+    -   [Prerequisite](#org03180a2)
+    -   [Option 1: Cargo install](#org2c45b51)
+    -   [Option 2: Prebuilt binaries](#org16bf039)
+    -   [Option 3: Build from source](#org293d78d)
+-   [About](#org856698c)
+    -   [How Mafa works](#orgfef2ea6)
+    -   [Why Mafa](#org4730f58)
+    -   [Background](#orgc965350)
+-   [Mafa Components](#orge3c93aa)
+    -   [More and more](#org8f2f01e)
+-   [Contributing](#orgc7ee50f)
+-   [License](#org84e5121)
 
 
 
-<a id="orgc0f08f6"></a>
+<a id="org935097a"></a>
 
 # Demos
 
@@ -26,30 +26,19 @@
 
 <table>
     <tr>
-    <td>
-    <img src="demo-twtl.gif" height="160px"/>
-    <p align="center">
-    <a href="<https://twitter.com/>">Twitter Timeline</a></p></td>
-
-<td>
-<img src="demo-gtrans.gif" height="160px"/>
-<p align="center">
-<a href="<https://translate.google.com/>">Google Translate</a></p></td>
-
-    <td>
-    <img src="demo-camd.gif" height="160px"/>
-    <p align="center">
-    <a href="<https://dictionary.cambridge.org/us/dictionary/english/>">Cambridge Dictionary</a></p></td>
+    <td><img src="demo-twtl.gif" height="160px"*><p align="center"><a href="<https://twitter.com>*">Twitter Timeline</a></p></td>
+    <td><img src="demo-gtrans.gif" height="160px"*><p align="center"><a href="<https://translate.google.com>*">Google Translate</a></p></td>
+    <td><img src="demo-camd.gif" height="160px"*><p align="center"><a href="<https://dictionary.cambridge.org/us/dictionary/english>*">Cambridge Dictionary</a></p></td>
     </tr>
 </table>
 
 
-<a id="org9926458"></a>
+<a id="org162533a"></a>
 
 # Installation
 
 
-<a id="org7c6ab90"></a>
+<a id="org03180a2"></a>
 
 ## Prerequisite
 
@@ -61,7 +50,7 @@ depends on:
     -   edition: ESR or Latest.
 
 
-<a id="org1326b87"></a>
+<a id="org2c45b51"></a>
 
 ## Option 1: Cargo install
 
@@ -73,27 +62,27 @@ If you have Cargo installed already, then you can
     mafa --version
 
 
-<a id="org0203cd7"></a>
+<a id="org16bf039"></a>
 
 ## Option 2: Prebuilt binaries
 
 Check [releases](https://github.com/micl2e2/mafa/releases).
 
 
-<a id="org0f66875"></a>
+<a id="org293d78d"></a>
 
 ## Option 3: Build from source
 
 WIP
 
 
-<a id="org32c6877"></a>
+<a id="org856698c"></a>
 
 # About
 
 Mafa is an in-terminal web browser companion. It resides in terminal,
 help perple browse websites' content readily and efficiently.
-Mafa accomplishs its tasks by [Mafa Components](#org8716cb2).
+Mafa accomplishs its tasks by [Mafa Components](#orgf5d09fd).
 
 Mafa develops for the ones who want to benefit from Web's openness
 as much as possible.
@@ -109,7 +98,7 @@ However, Mafa is **NOT** suitable for the following tasks:
     crawler does a better job)
 
 
-<a id="org92f86d7"></a>
+<a id="orgfef2ea6"></a>
 
 ## How Mafa works
 
@@ -118,7 +107,7 @@ Mozilla's [GeckoDriver](https://github.com/mozilla/geckodriver) is in use. With 
 human, browsing websites naturally for its user.
 
 
-<a id="org0bda391"></a>
+<a id="org4730f58"></a>
 
 ## Why Mafa
 
@@ -158,7 +147,7 @@ characteristic. However, Mafa can handle those dynamic and
 unpredictable web pages as effortlessly as the static ones. 
 
 
-<a id="orgd913d10"></a>
+<a id="orgc965350"></a>
 
 ## Background
 
@@ -182,11 +171,11 @@ publicly accessible to all users without discrimination, the APIs to
 access it should be as well. 
 
 
-<a id="orgdea748e"></a>
+<a id="orge3c93aa"></a>
 
 # Mafa Components
 
-<a id="org8716cb2"></a>
+<a id="orgf5d09fd"></a>
 
 *Mafa Components* are child programs that rely on [WebDriver](https://www.w3.org/TR/webdriver) to do 
 their job. Each module has a fixed, predefined website url and has a 
@@ -205,7 +194,7 @@ the selected ones are:
 -   IMODE: Interactive mode.
 
 
-<a id="orgf5d024e"></a>
+<a id="org8f2f01e"></a>
 
 ## More and more
 
@@ -219,14 +208,14 @@ requirements:
 3.  The functionality of public-offered APIs is limited.
 
 
-<a id="org75635db"></a>
+<a id="orgc7ee50f"></a>
 
 # Contributing
 
 Mafa is still in early development, any contribution is welcomed!
 
 
-<a id="org6b03891"></a>
+<a id="org84e5121"></a>
 
 # License
 
