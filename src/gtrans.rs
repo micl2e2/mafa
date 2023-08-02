@@ -610,7 +610,7 @@ impl<'a, 'b, 'c> MafaClient<'a, 'b, 'c, GtransInput, Upath> {
         } else if let CacheMechanism::Local = self.input.cachm {
             self.mafad.try_init_cache(
                 "gtrans",
-                "[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n-",
+                "[4,0,1,0,1,0,1,1,2,1,1,9,0,3,0,0,1]\n[4,0,1,0,1,0,1,1,2,1,1,9,0,2,0,0,1]\n-",
             )?;
         } else if let CacheMechanism::No = self.input.cachm {
             rebuild_cache = true;
