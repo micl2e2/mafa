@@ -4,8 +4,7 @@ version = "0.3.0"
 edition = "2021"
 rust-version = "1.66.0"
 authors = ["Michael Lee <micl2e2@proton.me>"]
-description = """Mafa is a command-line tool that helps people interact with
-online websites in a terminal(tty)."""
+description = "Mafa is an in-terminal web browser companion."
 repository = "http://github.com/micl2e2/mafa"
 documentation = "http://github.com/micl2e2/mafa"
 homepage = "http://github.com/micl2e2/mafa"
