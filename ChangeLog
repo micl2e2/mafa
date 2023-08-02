@@ -1,6 +1,6 @@
 2023-08-02  Michael Lee  <micl2e2@proton.me>
 
-	* 0.3.1: ???
+	* 0.3.1: 877cb060ee6840d2b82e2bd60089108ea81a3702
 
 	- BACKWARD_INCOMPATIBLE_CHANGES
 	--- Unify common shared options, from comps to mafa root.
@@ -14,7 +14,7 @@
 	--- Update deps minor versions.
 	--- Introduce FirefoxNotFound error, with tips output.
 
-	a64173f66d315e974f81cc04ae46bd7ca94bb41d12d5c4dcfa508928da5ae379  mafa-0.3.0-x86_64-unknown-linux-gnu.tar.gz
+	a64173f66d315e974f81cc04ae46bd7ca94bb41d12d5c4dcfa508928da5ae379  mafa-0.3.1-x86_64-unknown-linux-gnu.tar.gz
 	- x86_64-unknown-linux-gnu
 	- rustc 1.71.0 (8ede3aae2 2023-07-12)
 	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
