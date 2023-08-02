@@ -1,6 +1,6 @@
 2023-08-02  Michael Lee  <micl2e2@proton.me>
 
-	* 0.3.0: xxx
+	* 0.3.0: ee4e3fdb7e4e35b691ee7b3b984c1d57ffe0463a
 
 	- BACKWARD_INCOMPATIBLE_CHANGES
 	--- Unify common shared options, from comps to mafa root.
@@ -14,7 +14,11 @@
 	--- Update deps minor versions.
 	--- Introduce FirefoxNotFound error, with tips output.
 
-
+	a64173f66d315e974f81cc04ae46bd7ca94bb41d12d5c4dcfa508928da5ae379  mafa-0.3.0-x86_64-unknown-linux-gnu.tar.gz
+	- x86_64-unknown-linux-gnu
+	- rustc 1.71.0 (8ede3aae2 2023-07-12)
+	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
+	- glibc 2.36
 
 2023-07-24  Michael Lee  <micl2e2@proton.me>
 
@@ -24,6 +28,7 @@
 	--- Fix invalid cache for camdict
 
 	4021c267e9bf29be9b255061b40cad8f960f81b3048894f8f5277f08bd119b0c  mafa-0.2.3-x86_64-unknown-linux-gnu.tar.gz
+	- x86_64-unknown-linux-gnu
 	- rustc 1.71.0 (8ede3aae2 2023-07-12)
 	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
 	- glibc 2.36
@@ -37,6 +42,7 @@
 	--- Fix index overflow error for media-only quote tweets.
 
 	c2927628a0683c53794059729c5671721601c0737ae9aab1b3540b4567adcb68  mafa-0.2.2-x86_64-unknown-linux-gnu.tar.gz
+	- x86_64-unknown-linux-gnu
 	- rustc 1.71.0 (8ede3aae2 2023-07-12)
 	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
 	- glibc 2.36
@@ -48,6 +54,7 @@
 	This is an initial release.
 
 	aa597f9c391d33231f099eac6dedb8b9d49771210e0b1d453b780ef7e4d80654  mafa-0.1.0-x86_64-unknown-linux-gnu.tgz
+	- x86_64-unknown-linux-gnu
 	- rustc 1.71.0 (8ede3aae2 2023-07-12)
 	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
 	- glibc 2.36
