@@ -1,0 +1,64 @@
+2023-07-24  Michael Lee  <micl2e2@proton.me>
+
+	* 0.2.3: bbba43e7aaa9b4cbcaa8f7bc0d35b0f9084f70a2
+
+	BACKWARD_COMPATIBLE_FIXES:
+
+	- Fix invalid cache for camdict
+
+	PREBUILT:
+
+	4021c267e9bf29be9b255061b40cad8f960f81b3048894f8f5277f08bd119b0c  mafa-0.2.3-x86_64-unknown-linux-gnu.tar.gz
+	- rustc 1.71.0 (8ede3aae2 2023-07-12)
+	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
+	- glibc 2.36
+
+	* 0.2.2: d3b30bd2acc8e692b25f835a09c0b2889fb6ee9b
+
+	BACKWARD_COMPATIBLE_CHANGES:
+
+	- Support Cambridge Dictionary pronunciation.
+
+	BACKWARD_COMPATIBLE_FIXES:
+
+	- Fix index overflow error for media-only quote tweets.
+
+	PREBUILT:
+
+	c2927628a0683c53794059729c5671721601c0737ae9aab1b3540b4567adcb68  mafa-0.2.2-x86_64-unknown-linux-gnu.tar.gz
+	- rustc 1.71.0 (8ede3aae2 2023-07-12)
+	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
+	- glibc 2.36
+
+2023-07-20  Michael Lee  <micl2e2@proton.me>
+
+	* 0.1.0: 4d450b044dd12ef93fea295d57485f112e7bd825
+
+	This is an initial release.
+
+	PREBUILT:
+
+	aa597f9c391d33231f099eac6dedb8b9d49771210e0b1d453b780ef7e4d80654  mafa-0.1.0-x86_64-unknown-linux-gnu.tgz
+	- rustc 1.71.0 (8ede3aae2 2023-07-12)
+	- cargo 1.71.0 (cfd3bbd8f 2023-06-08)
+	- glibc 2.36
+
+2023-07-05  Michael Lee  <micl2e2@proton.me>
+
+	* 0.1.0-beta2: 4d450b044dd12ef93fea295d57485f112e7bd825
+
+	This is a beta release.
+
+	PREBUILT:
+
+	3ae6457dab03a738ee17e7ac3bf81dc7da39690f444d612e0fb40b389a69221a  mafa-0.1.0-beta2-x86_64-unknown-linux-gnu.tgz
+
+	06a67f0a014505b348e3257dcd36c025e0acf66dd109e585b526d19460cfbbd8  mafa-0.1.0-beta2-x86_64-apple-darwin.tgz
+
+
+0000-00-00  Michael Lee  <micl2e2@proton.me>
+
+	From semver.org:
+	BACKWARD_COMPATIBLE_CHANGES
+	BACKWARD_COMPATIBLE_FIXES
+	BACKWARD_INCOMPATIBLE_CHANGES
