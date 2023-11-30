@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Michael Lee <imichael2e2@proton.me/...@gmail.com>
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
 //
 // Licensed under the GNU General Public License, Version 3.0 or any later
 // version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -6,6 +6,11 @@
 // This file may not be copied, modified, or distributed except in compliance
 // with the license.
 //
+
+use std::borrow::Cow;
+use std::sync::Arc;
+use std::sync::Mutex;
+use wda::{GeckoDriver, WdaError, WdaSett, WdcError, WebDrvAstn};
 
 use clap::Arg as ClapArg;
 use clap::ArgAction as ClapArgAction;
@@ -21,11 +26,16 @@ use error::Result;
 mod private_macros;
 
 pub mod mafadata;
+use mafadata::MafaData;
 
 pub mod ev_ntf;
+use ev_ntf::EurKind;
+use ev_ntf::EventNotifier;
 
 #[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
 mod comm;
+#[cfg(any(feature = "twtl", feature = "gtrans", feature = "camd"))]
+use comm::CacheMechanism;
 
 #[cfg(feature = "twtl")]
 pub mod twtl;
@@ -40,10 +50,17 @@ pub mod camd;
 pub struct MafaInput {
     pub silent: bool,
     pub nocolor: bool,
+    pub ascii: bool,
+    pub wrap_width: u16,
+    pub wrap_may_break: bool,
     pub tout_page_load: u32,
     pub tout_script: u32,
     pub socks5: String,
     pub gui: bool,
+    pub list_profile: bool,
+    pub use_profile: String,
+    cachm: CacheMechanism,
+    pub elap: bool,
 }
 
 impl MafaInput {
@@ -58,6 +75,23 @@ impl MafaInput {
         // nocolor
         if ca_matched.get_flag(opts::NoColorMode::id()) {
             mafa_in.nocolor = true;
+        }
+
+        // ascii
+        if ca_matched.get_flag(opts::AsciiMode::id()) {
+            mafa_in.ascii = true;
+        }
+
+        // wrap-width
+        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::WrapWidth::id()) {
+            let intval =
+                u16::from_str_radix(&optval, 10).map_err(|_| MafaError::InvalidWrapWidth)?;
+            mafa_in.wrap_width = intval;
+        }
+
+        // wrap-may-break
+        if ca_matched.get_flag(opts::WrapMayBreak::id()) {
+            mafa_in.wrap_may_break = true;
         }
 
         // page load timeout
@@ -86,6 +120,26 @@ impl MafaInput {
         // gui
         if ca_matched.get_flag(opts::GuiMode::id()) {
             mafa_in.gui = true;
+        }
+
+        // elap
+        if ca_matched.get_flag(opts::Elapsed::id()) {
+            mafa_in.elap = true;
+        }
+
+        // cachm
+        if let Ok(Some(optval)) = ca_matched.try_get_one::<String>(opts::CacheMech::id()) {
+            mafa_in.cachm = CacheMechanism::from_str(optval);
+        }
+
+        // list profile
+        if ca_matched.get_flag(opts::ListProfile::id()) {
+            mafa_in.list_profile = true;
+        }
+
+        // use profile
+        if let Ok(Some(val)) = ca_matched.try_get_one::<String>(opts::UseProfile::id()) {
+            mafa_in.use_profile = val.clone();
         }
 
         dbgg!(&mafa_in);
@@ -119,9 +173,7 @@ pub mod opts {
         pub fn long_helper() -> String {
             let bf = "Enable silent mode
 
-Any insignificant information redirected to STDOUT will be hidden.
-
-NOTE: subcommands can override this option if this one is not specified.";
+Any insignificant output redirected to standard output will be hidden.";
 
             let mut af_buf = [0u8; 256];
 
@@ -146,17 +198,119 @@ NOTE: subcommands can override this option if this one is not specified.";
         }
         #[inline]
         pub fn helper() -> &'static str {
-            "Print without color."
+            "Enable non-color mode"
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "Print without color
+            let bf = "Enable non-color mode
 
-Any information will be printed without using ANSI escape codes
-
-NOTE: subcommands can override this option if this one is not specified.";
+Any output will be printed without color. Default is with color.";
 
             let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct AsciiMode;
+    impl AsciiMode {
+        #[inline]
+        pub fn id() -> &'static str {
+            "ASCIIMODE"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "ascii"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Use classical ASCII style"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Use classical ASCII style
+
+ASCII style only allows ASCII characters to mafa's meta information displaying. Default is Unicode mode, which allows more distinguishable characters for displaying.
+
+NOTE: the minimum is 18, any value smaller than 18 will fallback to 80."#;
+            let mut af_buf = [0u8; 128];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct WrapWidth;
+    impl WrapWidth {
+        #[inline]
+        pub fn id() -> &'static str {
+            "WRAPWIDTH"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "wrap-width"
+        }
+        #[inline]
+        pub fn def_val() -> &'static str {
+            "80"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Wrap output with a width limit"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Wrap output with a width limit
+
+NOTE: the minimun is 18, any value smaller than 18 will fallback to 80."#;
+            let mut af_buf = [0u8; 128];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct WrapMayBreak;
+    impl WrapMayBreak {
+        #[inline]
+        pub fn id() -> &'static str {
+            "WRAPMAYBREAK"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "wrap-may-break"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Wrap output in MayBreak style"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"Wrap output in MayBreak style
+
+Default is "NoBreak" style. This change the style to "MayBreak".
+
+NOTE: This is a hint option, components may ignore it.
+
+NOTE: "NoBreak" suits for languages that rely om ASCII SPACE to delimit words. "MayBreak" suits for otherwise languages. See more details in Bwrap documentation: https://docs.rs/bwrap/latest/bwrap/enum.WrapStyle.html."#;
+            let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
                 .unwrap()
@@ -187,9 +341,85 @@ NOTE: subcommands can override this option if this one is not specified.";
 
 Run the underlying web browser in GUI mode.
 
-USED WITH CAUTION: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness.
+NOTE: when GUI mode is on, any user operation on web browser interface MAY affect mafa's correctness, use with caution.";
 
-NOTE: subcommands can override this option.";
+            let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct ListProfile;
+    impl ListProfile {
+        #[inline]
+        pub fn id() -> &'static str {
+            "LIST_PROFILE"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "list-p"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "List all existing browser profiles"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = "List all existing profiles's ID
+
+Profiles' ID is surrounded by a pair of brackets:
+...
+<PROFILE ID>
+<PROFILE ID>
+<PROFILE ID>
+...";
+
+            let mut af_buf = [0u8; 256];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct UseProfile;
+    impl UseProfile {
+        #[inline]
+        pub fn id() -> &'static str {
+            "USE_PROFILE"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "profile"
+        }
+        #[inline]
+        pub fn shortopt() -> char {
+            'p'
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Use specific browser profile"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = "Use specific profile ID
+
+Profile IDs are strings including ONLY letters, nimbers or hyphens.
+
+NOTE: the profile will be created if not existing. Browser profiles' size is non-trivial, use with caution.
+";
 
             let mut af_buf = [0u8; 256];
 
@@ -218,15 +448,13 @@ NOTE: subcommands can override this option.";
         }
         #[inline]
         pub fn helper() -> &'static str {
-            "Fetch with SOCKS5 proxy                                        "
+            "Fetch data through SOCKS5 praxy                                        "
         }
         #[inline]
         pub fn long_helper() -> String {
-            let bf = "Fetch with SOCKS5 proxy
+            let bf = "Fetch data through SOCKS5 proxy
 
-The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries at first initialization.
-
-NOTE: subcommands can override this option.";
+The default SOCKS5 proxy used by the underlying web browser to fetch data. This is also used by mafa to fetch webdriver server binaries when initialization.";
 
             let mut af_buf = [0u8; 256];
 
@@ -267,7 +495,7 @@ NOTE: subcommands can override this option.";
 
 The default timeout for loading web page(i.e., opening a website). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
 
-NOTE: subcommands can override this option.";
+NOTE: customizing this option mostly brings the negative effect for page loading, do not use unless you know what you are doing.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -307,7 +535,7 @@ NOTE: subcommands can override this option.";
 
 The default timeout for script evaluation(i.e., evaluating JavaScript synchronously or asynchronously). Refer to WebDriver standard(https://www.w3.org/TR/webdriver2/#timeouts) for more details.
 
-NOTE: subcommands can override this option.";
+NOTE: customizing this option mostly brings the negative effect for script evaluation, do not use unless you know what you are doing.";
             let mut af_buf = [0u8; 512];
 
             let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
@@ -316,6 +544,65 @@ NOTE: subcommands can override this option.";
                 .unwrap();
 
             String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct CacheMech;
+    impl CacheMech {
+        #[inline]
+        pub fn id() -> &'static str {
+            "CACHE_MECHNISM"
+        }
+        #[inline]
+        pub fn n_args() -> Range<usize> {
+            1..2
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "cache"
+        }
+        #[inline]
+        pub fn def_val() -> &'static str {
+            "LOCAL"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "The caching mechanism"
+        }
+        #[inline]
+        pub fn long_helper() -> String {
+            let bf = r#"The caching mechanism
+
+Avvilable values are: LOCAL, REMOTE, NO.
+
+LOCAL instructs mafa to use local cache, typically located in mafa's dedicated cache directory; REMOTE instructs mafa to use remote cache, which is stored in a dedicated remote repository, note that this option overrides all existing caches; NO instructs mafa to build cache freshly, this may need more time, compared to other mechanisms.
+
+Performance : LOCAL > REMOTE > NO
+Stability   :    NO > REMOTE > LOCAL"#;
+            let mut af_buf = [0u8; 512];
+
+            let rl = bwrap::Wrapper::new(bf, 70, &mut af_buf)
+                .unwrap()
+                .wrap()
+                .unwrap();
+
+            String::from_utf8_lossy(&af_buf[0..rl]).to_string()
+        }
+    }
+
+    pub struct Elapsed;
+    impl Elapsed {
+        #[inline]
+        pub fn id() -> &'static str {
+            "ELAPSED"
+        }
+        #[inline]
+        pub fn longopt() -> &'static str {
+            "elap"
+        }
+        #[inline]
+        pub fn helper() -> &'static str {
+            "Report the time cost in major phases"
         }
     }
 }
@@ -332,6 +619,32 @@ pub fn get_cmd() -> ClapCommand {
 
     let opt_nocolor = {
         type O = opts::NoColorMode;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_ascii = {
+        type O = opts::AsciiMode;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+    };
+
+    let opt_wrapwidth = {
+        type O = opts::WrapWidth;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .default_value(O::def_val())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_wrapmaybreak = {
+        type O = opts::WrapMayBreak;
         ClapArg::new(O::id())
             .long(O::longopt())
             .action(ClapArgAction::SetTrue)
@@ -377,6 +690,42 @@ pub fn get_cmd() -> ClapCommand {
             .long_help(O::long_helper())
     };
 
+    let opt_cachm = {
+        type O = opts::CacheMech;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .default_value(O::def_val())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_elapsed = {
+        type O = opts::Elapsed;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+    };
+
+    let opt_list_profile = {
+        type O = opts::ListProfile;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .action(ClapArgAction::SetTrue)
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
+    let opt_use_profile = {
+        type O = opts::UseProfile;
+        ClapArg::new(O::id())
+            .long(O::longopt())
+            .short(O::shortopt())
+            .num_args(O::n_args())
+            .help(O::helper())
+            .long_help(O::long_helper())
+    };
+
     static HELPER_TXT: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(|| {
         let mut s = format!("{}\ncomponents: ", clap::crate_version!());
         #[cfg(feature = "imode")]
@@ -418,7 +767,7 @@ There is NO WARRANTY, to the extent permitted by law.";
             .long_about(
                 "Enter interactive mode
 
-With interactive mode, Mafa's components interact with websites statefully,
+With interactive mode, mafa's components interact with websites statefully,
 performing tasks without full initializtion of the underlying WebDriver,
 this usually results in faster performance.
 
@@ -440,10 +789,112 @@ ones under normal mode, i.e., -h for short help, --help for long help.
     let cmd_mafa = cmd_mafa
         .arg(opt_silient)
         .arg(opt_nocolor)
+        .arg(opt_ascii)
+        .arg(opt_wrapwidth)
+        .arg(opt_wrapmaybreak)
         .arg(opt_gui)
         .arg(opt_socks5)
         .arg(opt_tout_pageload)
-        .arg(opt_tout_script);
+        .arg(opt_tout_script)
+        .arg(opt_cachm)
+        .arg(opt_elapsed)
+        .arg(opt_list_profile)
+        .arg(opt_use_profile);
 
     cmd_mafa
+}
+
+//
+
+#[derive(Debug)]
+pub struct MafaClient<'a, 'b, 'c, I, C> {
+    mafad: &'a MafaData,
+    ntf: Arc<Mutex<EventNotifier>>,
+    input: &'b MafaInput,
+    sub_input: I,
+    wda: &'c WebDrvAstn<GeckoDriver>,
+    caches: Vec<C>,
+}
+
+impl<'a, 'b, 'c, I, C: Default> MafaClient<'a, 'b, 'c, I, C> {
+    pub fn new(
+        mafad: &'a MafaData,
+        ntf: Arc<Mutex<EventNotifier>>,
+        mafa_in: &'b MafaInput,
+        sub_in: I,
+        wda_inst: &'c WebDrvAstn<GeckoDriver>,
+    ) -> Self {
+        MafaClient {
+            mafad,
+            ntf,
+            input: mafa_in,
+            sub_input: sub_in,
+            wda: wda_inst,
+            caches: Default::default(),
+        }
+    }
+
+    pub fn set_sub_input(&mut self, newin: I) {
+        self.sub_input = newin;
+    }
+}
+
+fn get_wda_setts(mafa_in: &MafaInput) -> Vec<WdaSett> {
+    let mut wda_setts = vec![];
+
+    // gui
+    if !mafa_in.gui {
+        wda_setts.push(WdaSett::NoGui);
+    }
+
+    // socks5
+    if comm::is_valid_socks5(&mafa_in.socks5) {
+        wda_setts.push(WdaSett::PrepareUseSocksProxy(Cow::Borrowed(
+            &mafa_in.socks5,
+        )));
+        wda_setts.push(WdaSett::Socks5Proxy(Cow::Borrowed(&mafa_in.socks5)));
+        wda_setts.push(WdaSett::ProxyDnsSocks5);
+    }
+
+    // tout pageload
+    wda_setts.push(WdaSett::PageLoadTimeout(mafa_in.tout_page_load));
+
+    // tout script
+    wda_setts.push(WdaSett::ScriptTimeout(mafa_in.tout_script));
+
+    // profile
+    if mafa_in.use_profile.len() > 0 {
+        wda_setts.push(WdaSett::BrowserProfileId(Cow::Borrowed(
+            &mafa_in.use_profile,
+        )))
+    }
+
+    dbgg!(&wda_setts);
+
+    wda_setts
+}
+
+pub fn init_wda(mafa_in: &MafaInput) -> Result<WebDrvAstn<GeckoDriver>> {
+    let wda_inst: WebDrvAstn<GeckoDriver>;
+    let wda_setts = get_wda_setts(&mafa_in);
+    dbgg!(&wda_setts);
+    match WebDrvAstn::<GeckoDriver>::new(wda_setts) {
+        Ok(ret) => wda_inst = ret,
+        Err(err_wda) => match err_wda {
+            WdaError::WdcNotReady(WdcError::BadDrvCmd(err, msg), _) => {
+                if msg.contains("socksProxy is not a valid URL") {
+                    return Err(MafaError::InvalidSocks5Proxy);
+                } else {
+                    return Err(MafaError::WebDrvCmdRejected(err, msg));
+                }
+            }
+            WdaError::InvalidBrowserProfileId => return Err(MafaError::InvalidUseProfile),
+            WdaError::BrowserBinaryNotFound => return Err(MafaError::FirefoxNotFound),
+            _ => {
+                return Err(MafaError::UnexpectedWda(err_wda));
+            }
+        },
+    };
+
+    Ok(wda_inst)
 }

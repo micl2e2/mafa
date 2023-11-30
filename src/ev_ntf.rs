@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Michael Lee <imichael2e2@proton.me/...@gmail.com>
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
 //
 // Licensed under the GNU General Public License, Version 3.0 or any later
 // version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -98,6 +98,8 @@ pub enum MafaEvent {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EurKind {
+    NoSubCmd,
+    ListProfile,
     ImodeHelper,
     TwtlResult,    /* twitter timeline result */
     TwtlTryLogin,  /* login/logout twitter account */
@@ -195,6 +197,10 @@ impl EventNotifier {
         self.color = false;
     }
 
+    ///
+    /// Note that, this is not supposed to respond the errors directly,
+    /// but events, one of which is `FatalMafaError`, which is the
+    /// entry to handle errors.
     pub fn notify(&mut self, ev: MafaEvent) {
         let mut is_skip_push = false;
 
@@ -204,7 +210,7 @@ impl EventNotifier {
                     println!();
                 }
                 // if start by _, we dont print anything
-                if output.as_bytes()[0] != b'_' {
+                if output.len() > 0 && output.as_bytes()[0] != b'_' {
                     println!("{}", output);
                 }
             }
@@ -235,11 +241,11 @@ impl EventNotifier {
                                 println_not!(self.smode, "");
                             }
 
-                            println_not!(self.smode, "[{}] Initializing...ok", cate.as_str());
+                            println_not!(self.smode, "[{}] Initialize...ok", cate.as_str());
                         }
                     }
                 } else {
-                    print_not!(self.smode, "[{}] Initializing...", cate.as_str());
+                    print_not!(self.smode, "[{}] Initialize...", cate.as_str());
                 }
             }
 
@@ -273,11 +279,11 @@ impl EventNotifier {
                             if !self.is_prev_final() {
                                 println_not!(self.smode, "");
                             }
-                            println_not!(self.smode, "[{}] Fetching result...ok", cate.as_str());
+                            println_not!(self.smode, "[{}] Fetch...ok", cate.as_str());
                         }
                     }
                 } else {
-                    print_not!(self.smode, "[{}] Fetching result...", cate.as_str());
+                    print_not!(self.smode, "[{}] Fetch...", cate.as_str());
                 }
             }
 
@@ -694,6 +700,22 @@ impl EventNotifier {
                     );
                 }
 
+                MafaError::InvalidUseProfile => {
+                    if !self.is_prev_final() {
+                        eprintln_not!(self.smode, "");
+                    }
+
+                    eprint_not!(
+                        self.smode,
+                        if self.color {
+                            "\u{1b}[31;1merror: \u{1b}[0m"
+                        } else {
+                            "error: "
+                        }
+                    );
+                    eprintln_not!(self.smode, "invalid profile id ({})", cate.as_str());
+                }
+
                 MafaError::CacheRebuildFail(fk) => {
                     if !self.is_prev_final() {
                         eprintln_not!(self.smode, "");
@@ -712,6 +734,30 @@ impl EventNotifier {
                         "rebuild cache failed({}): {:?}",
                         cate.as_str(),
                         fk
+                    );
+                }
+
+                MafaError::FirefoxNotFound => {
+                    if !self.is_prev_final() {
+                        eprintln_not!(self.smode, "");
+                    }
+
+                    eprint_not!(
+                        self.smode,
+                        if self.color {
+                            "\u{1b}[31;1merror: \u{1b}[0m"
+                        } else {
+                            "error: "
+                        }
+                    );
+
+                    eprintln_not!(self.smode, "Firefox not installed");
+
+                    // extra hint
+                    eprintln_not!(
+                        self.smode,
+                        "{}",
+                        bwrap::wrap_nobrk!(get_ff_bin_tip(self.color), 80, "       ")
                     );
                 }
 
@@ -914,5 +960,19 @@ impl EventNotifier {
         io::stdout().flush().unwrap();
 
         dbgg!(&self.queue);
+    }
+}
+
+fn get_ff_bin_tip(color: bool) -> &'static str {
+    let osinfo = os_info::get();
+    match osinfo.os_type() {
+        os_info::Type::Ubuntu => {
+            if color {
+                "  \u{1b}[32mtip\u{1b}[0m: Only Firefox ESR is supported on this platform, please install `firefox-esr` package"
+            } else {
+                "  tip: Only Firefox ESR is supported on this platform, please install `firefox-esr` package"
+            }
+        }
+        _ => "",
     }
 }

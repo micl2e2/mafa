@@ -1,22 +1,21 @@
 [package]
 name = "mafa"
-version = "0.1.0"
+version = "0.3.1"
 edition = "2021"
 rust-version = "1.66.0"
-authors = ["Michael Lee <imichael2e2@proton.me/...@gmail.com>"]
-description = """Mafa is a command-line tool that helps people interact with
-online websites in a terminal(tty)."""
-repository = "https://github.com/imichael2e2/mafa"
-documentation = "https://github.com/imichael2e2/mafa"
-homepage = "https://github.com/imichael2e2/mafa"
+authors = ["Michael Lee <micl2e2@proton.me>"]
+description = "Mafa is an in-terminal web browser companion."
+repository = "https://github.com/micl2e2/mafa"
+documentation = "https://github.com/micl2e2/mafa"
+homepage = "https://github.com/micl2e2/mafa"
 license = "GPL-3.0-or-later"
-keywords = ["webdriver", "twitter", "google-translate", "not-a-crawler"]
+keywords = ["twitter", "google-translate", "cambridge-dictionary"]
 categories = ["command-line-utilities", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = []
+default = ["imode", "gtrans", "camd", "twtl"]
 imode = ["dep:rustyline"]
 twtl = ["dep:quick-xml"]
 gtrans = []
@@ -27,7 +26,7 @@ tst_twtl_logined = []
 [dependencies]
 serde = { version = "1.0.0", features = ["derive"] }
 serde_json = "1.0.0"
-wda = { version = "0.1.0-beta8",  features = ["firefox"] }
+wda = { version = "0.5.0",  features = ["firefox"] }
 bwrap = { version = "1.0.0", features = ["use_std"] }
 regex = "1.0.0"
 clap = { version = "4.0.0", features = ["cargo"] }
@@ -36,6 +35,8 @@ libc = "0.2.0"
 once_cell = "1.0.0"
 rustyline = { version = "12.0.0", features = [], optional = true }
 quick-xml = { version = "0.29.0", features = ["serialize"], optional = true }
+os_info = { version = "3.7.0", default-features = false }
 
 [profile.release]
 strip = "symbols"
+lto = true

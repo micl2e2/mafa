@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Michael Lee <imichael2e2@proton.me/...@gmail.com>
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
 //
 // Licensed under the GNU General Public License, Version 3.0 or any later
 // version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -273,6 +273,7 @@ impl<'a> TweetOverview<'a> {
             if orig.as_bytes()[begi] == 0xa {
                 begi += 1;
             }
+            // for those tweets only contains pics
             if begi > endi {
                 begi = endi;
             }
@@ -285,7 +286,7 @@ impl<'a> TweetOverview<'a> {
                 && li_quotetw_disname != 0
                 && li_quotetw_usrname != 0
             {
-                let begi_ctn = tw_as_lines[li_quotetw_firstl].1 + 1; // drop leading LF
+                let mut begi_ctn = tw_as_lines[li_quotetw_firstl].1 + 1; // drop leading LF
                 let endi_ctn = tw_as_lines[li_ctn_lastl].2;
                 let begi_disname = tw_as_lines[li_quotetw_disname].1 + 1;
                 let endi_disname = tw_as_lines[li_quotetw_disname].2;
@@ -293,6 +294,12 @@ impl<'a> TweetOverview<'a> {
                 let endi_usrname = tw_as_lines[li_quotetw_usrname].2;
                 let begi_tstamp = tw_as_lines[li_quotetw_tstamp].1 + 1;
                 let endi_tstamp = tw_as_lines[li_quotetw_tstamp].2;
+
+                // for those tweets only contains pics
+                if begi_ctn > endi_ctn {
+                    begi_ctn = endi_ctn;
+                }
+
                 Some(QuoteTweet {
                     dispname: Cow::Borrowed(&orig[begi_disname..endi_disname]),
                     username: Cow::Borrowed(&orig[begi_usrname..endi_usrname]),

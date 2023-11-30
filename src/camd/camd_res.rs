@@ -1,3 +1,12 @@
+// Copyright (C) 2023 Michael Lee <micl2e2@proton.me>
+//
+// Licensed under the GNU General Public License, Version 3.0 or any later
+// version <LICENSE-GPL or https://www.gnu.org/licenses/gpl-3.0.txt>.
+//
+// This file may not be copied, modified, or distributed except in compliance
+// with the license.
+//
+
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 
@@ -107,8 +116,9 @@ impl DefaultExpl<'_> {
         part_hdl += "\n";
 
         // currently omit pronun
-        // output += self.pronun;
-        // output += "\n";
+        output += &Self::pretty_pronun(self.pronun, nocolor);
+        // output += (self.pronun);
+        output += "\n";
 
         for expl in &self.expls {
             output += &expl.pretty_print(nocolor, asciiful, wrap_width)?;
@@ -121,8 +131,81 @@ impl DefaultExpl<'_> {
             output = part_hdl + &output;
             Ok(output)
         }
+    }
 
-        // Ok(output)
+    fn pretty_pronun(s: &str, nocolor: bool) -> String {
+        let extracted = Self::extract_pronun(s);
+        let mut ret = String::default();
+
+        let prefix_us = if nocolor {
+            "/US "
+        } else {
+            "/\x1b[36;1mUS\x1b[0m "
+        };
+        let prefix_uk = if nocolor {
+            "/UK "
+        } else {
+            "/\x1b[35;1mUK\x1b[0m "
+        };
+
+        match extracted {
+            (Some(us), Some(uk), None) => {
+                ret += prefix_us;
+                ret += &us[1..];
+                ret += "  ";
+                ret += prefix_uk;
+                ret += &uk[1..];
+            }
+            (Some(us), None, None) => {
+                ret += prefix_us;
+                ret += &us[1..];
+            }
+            (None, Some(uk), None) => {
+                ret += prefix_uk;
+                ret += &uk[1..];
+            }
+            (None, None, Some(unknown)) => {
+                ret += "Unknown Pronun  ";
+                ret += unknown;
+            }
+            _ => ret += "Unsupported Pronun",
+        }
+
+        ret += "\n";
+
+        ret
+    }
+
+    ///
+    /// us,uk,unknown
+    fn extract_pronun(s: &str) -> (Option<&str>, Option<&str>, Option<&str>) {
+        let us_pronu = Regex::new("US *(/[^A-Z]*/) *$").expect("bug");
+        let us2_pronu = Regex::new("US *(/[^A-Z]*/) *UK$").expect("bug");
+        let uk_pronu = Regex::new("UK *(/[^A-Z]*/) *$").expect("bug");
+        let uk2_pronu = Regex::new("UK *(/[^A-Z]*/) *US$").expect("bug");
+        let us_uk_pronu = Regex::new("US *(/[^A-Z]*/) *UK *(/[^A-Z]*/)").expect("bug");
+
+        let mut us_got: Option<&str> = None;
+        let mut uk_got: Option<&str> = None;
+
+        if let Some(v) = us_uk_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+            uk_got = Some(v.get(2).expect("bug").as_str());
+        } else if let Some(v) = us_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = us2_pronu.captures(s) {
+            us_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = uk_pronu.captures(s) {
+            uk_got = Some(v.get(1).expect("bug").as_str());
+        } else if let Some(v) = uk2_pronu.captures(s) {
+            uk_got = Some(v.get(1).expect("bug").as_str());
+        }
+
+        if us_got.is_none() && uk_got.is_none() {
+            (None, None, Some(s))
+        } else {
+            (us_got, uk_got, None)
+        }
     }
 }
 
@@ -503,6 +586,8 @@ impl<'w, 's> CamdResult<'w, 's> {
     pub fn from_str(word: &'w str, s: &'s str) -> Result<Self> {
         let bytes = s.as_bytes();
         let mut lv_expl_list = Vec::<&str>::new();
+
+        dbgg!((word, s));
 
         let mut begi_lv = 0usize;
         let mut endi_lv = 0usize;
@@ -1136,5 +1221,50 @@ mod tst {
         assert_eq!(camd_res, expected_camd_res);
 
         dbg!(&camd_res, &expected_camd_res);
+    }
+
+    #[test]
+    fn extract_pronun_1() {
+        let s = "US  /wɝːld/ UK  /wɜːld/";
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (Some("/wɝːld/"), Some("/wɜːld/"), None)
+        );
+    }
+
+    #[test]
+    fn extract_pronun_2() {
+        let s = "US  /wɝːld/";
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (Some("/wɝːld/"), None, None)
+        );
+    }
+
+    #[test]
+    fn extract_pronun_3() {
+        let s = "UK  /wɝːld/";
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (None, Some("/wɝːld/"), None)
+        );
+    }
+
+    #[test]
+    fn extract_pronun_4() {
+        let s = "US  /wɝːld/ UK";
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (Some("/wɝːld/"), None, None)
+        );
+    }
+
+    #[test]
+    fn extract_pronun_5() {
+        let s = "UK  /wɝːld/ US";
+        assert_eq!(
+            DefaultExpl::extract_pronun(s),
+            (None, Some("/wɝːld/"), None)
+        );
     }
 }
