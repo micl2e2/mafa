@@ -1,4 +1,4 @@
-**(The project is not actively maintained anymore, though the source code and binaries are still working)**
+**(The project won't be actively maintained anymore)**
 
 # Table of Contents
 
