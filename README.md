@@ -1,3 +1,4 @@
+**(The project is not actively maintained anymore, though the source code and binaries are still working)**
 
 # Table of Contents
 
